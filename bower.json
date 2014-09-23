@@ -9,7 +9,7 @@
   "main": "dist/apGroupManager.min.js",
   "dependencies": {
     "angular": "~1.2",
-    "angular-point": "^1.0.1",
+    "angular-point": "^1.0.0",
     "angular-toastr": "^0.4.0",
     "angular-ui-select2": "~0.0.5",
     "jquery": "~1.11",
