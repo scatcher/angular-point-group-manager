@@ -1,0 +1,31 @@
+{
+  "name": "angular-point-group-manager",
+  "version": "0.0.1",
+  "homepage": "https://github.com/scatcher/angular-point-group-manager",
+  "authors": [
+    "Scott Hatcher <scott@hatcher.solutions>"
+  ],
+  "description": "angular-point tool to manage SharePoint users and groups.",
+  "main": "dist/apGroupManager.min.js",
+  "dependencies": {
+    "angular": "~1.2",
+    "angular-point": "^1.0.1",
+    "angular-toastr": "^0.4.0",
+    "angular-ui-select2": "~0.0.5",
+    "jquery": "~1.11",
+    "lodash": "^2.4",
+    "lodash-deep": "^1.1",
+    "bootstrap": "^3.2.0"
+  },
+  "keywords": [
+    "angular-point"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
