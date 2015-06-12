@@ -1,0 +1,39 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "angular-ui-bootstrap/angular-ui-bootstrap.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "angularjs/angular.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "angularjs/angular-mocks.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "angularjs/angular-sanitize.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "node/node.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "toastr/toastr.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "gulp/gulp.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "jquery/jquery.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    },
+    "karma-jasmine/karma-jasmine.d.ts": {
+      "commit": "484544d14d400190b20f270341c97b16adc0f1ef"
+    }
+  }
+}
