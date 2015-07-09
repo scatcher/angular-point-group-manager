@@ -62,7 +62,7 @@
                 <div class="col-xs-5">
                     <div class="form-group">
                         <label>Available Users ({{vm.users.available.length}})</label>
-                        <select ng-model="users.selectedAvailable"
+                        <select ng-model="vm.users.selectedAvailable"
                                 ng-options="user.Name for user in vm.users.available"
                                 multiple="multiple" class="multiselect form-control"></select>
                     </div>
