@@ -1,6 +1,6 @@
 {
   "name": "angular-point-group-manager",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "angular-point tool to manage SharePoint users and groups.",
   "main": "dist/apGroupManager.min.js",
   "directories": {

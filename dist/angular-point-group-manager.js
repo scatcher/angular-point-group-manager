@@ -47,7 +47,7 @@ var ap;
     var groupmanager;
     (function (groupmanager) {
         'use strict';
-        var vm, $filter, $q, $timeout, _, apConfig, apDataService, ngTableParams, toastr;
+        var vm, $filter, $q, $timeout, _, apConfig, apDataService, NgTableParams, toastr;
         var GroupManagerController = (function () {
             function GroupManagerController($scope, $injector) {
                 this.$scope = $scope;
@@ -62,7 +62,7 @@ var ap;
                 this.users = new groupmanager.DataContainer();
                 vm = this;
                 $filter = $injector.get('$filter');
-                ngTableParams = $injector.get('ngTableParams');
+                NgTableParams = $injector.get('NgTableParams');
                 $q = $injector.get('$q');
                 $timeout = $injector.get('$timeout');
                 apDataService = $injector.get('apDataService');
@@ -109,7 +109,7 @@ var ap;
                 Array.prototype.push.apply(data.assigned, assigned);
             };
             GroupManagerController.prototype.buildTables = function () {
-                vm.groupsTable = new ngTableParams({
+                vm.groupsTable = new NgTableParams({
                     page: 1,
                     count: 30,
                     sorting: {
@@ -117,11 +117,11 @@ var ap;
                     }
                 }, {
                     total: vm.groups.all.length,
-                    getData: function ($defer, params) {
+                    getData: function (params) {
                         console.time('Filtering');
                         // use build-in angular filter
                         var orderedData = vm.groups.all;
-                        orderedData = $filter('filter')(orderedData, function (record) {
+                        var filteredData = $filter('filter')(orderedData, function (record) {
                             var match = false;
                             if (vm.groupFilter === '') {
                                 return true;
@@ -135,11 +135,11 @@ var ap;
                             });
                             return match;
                         });
-                        params.total(orderedData.length);
-                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                        params.total(filteredData.length);
+                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                     }
                 });
-                vm.usersTable = new ngTableParams({
+                vm.usersTable = new NgTableParams({
                     page: 1,
                     count: 30,
                     sorting: {
@@ -147,11 +147,9 @@ var ap;
                     }
                 }, {
                     total: vm.users.all.length,
-                    getData: function ($defer, params) {
-                        console.time('Filtering');
-                        // use build-in angular filter
+                    getData: function (params) {
                         var orderedData = vm.users.all;
-                        orderedData = $filter('filter')(orderedData, function (record) {
+                        var filteredData = $filter('filter')(orderedData, function (record) {
                             var match = false;
                             if (vm.userFilter === '') {
                                 return true;
@@ -166,7 +164,7 @@ var ap;
                             return match;
                         });
                         params.total(orderedData.length);
-                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                     }
                 });
             };

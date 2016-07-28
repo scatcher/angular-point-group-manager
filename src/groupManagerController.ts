@@ -5,7 +5,7 @@
 module ap.groupmanager {
     'use strict';
 
-    var vm: GroupManagerController, $filter, $q, $timeout, _, apConfig, apDataService, ngTableParams, toastr;
+    let vm: GroupManagerController, $filter, $q, $timeout, _, apConfig, apDataService, NgTableParams, toastr;
 
 
     export class GroupManagerController {
@@ -26,7 +26,7 @@ module ap.groupmanager {
 
             vm = this;
             $filter = $injector.get('$filter');
-            ngTableParams = $injector.get('ngTableParams');
+            NgTableParams = <NgTableParams<any>>$injector.get('NgTableParams');
             $q = $injector.get('$q');
             $timeout = $injector.get('$timeout');
             apDataService = $injector.get('apDataService');
@@ -53,11 +53,11 @@ module ap.groupmanager {
         }
 
         buildInputs(assignedItems, type) {
-            var map = [];
-            var available = [];
-            var assigned = [];
+            let map = [];
+            let available = [];
+            let assigned = [];
 
-            var data = vm[type];
+            let data = vm[type];
 
             //Clear out any existing data
             data.available.length = 0;
@@ -85,7 +85,7 @@ module ap.groupmanager {
         }
 
         buildTables() {
-            vm.groupsTable = new ngTableParams({
+            vm.groupsTable = new NgTableParams({
                 page: 1,            // show first page
                 count: 30,           // count per page
                 sorting: {
@@ -93,18 +93,18 @@ module ap.groupmanager {
                 }
             }, {
                     total: vm.groups.all.length, // length of data
-                    getData: function($defer, params) {
+                    getData: function(params) {
                         console.time('Filtering');
                         // use build-in angular filter
-                        var orderedData = vm.groups.all;
-                        orderedData = $filter('filter')(orderedData, function(record) {
-                            var match = false;
+                        let orderedData = vm.groups.all;
+                        let filteredData = $filter('filter')(orderedData, function(record) {
+                            let match = false;
 
                             if (vm.groupFilter === '') {
                                 return true;
                             }
-                            var textFields = ['ID', 'Name', 'Description'];
-                            var searchStringLowerCase = vm.groupFilter.toLowerCase();
+                            let textFields = ['ID', 'Name', 'Description'];
+                            let searchStringLowerCase = vm.groupFilter.toLowerCase();
                             _.each(textFields, function(fieldName) {
                                 if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
                                     match = true;
@@ -113,12 +113,12 @@ module ap.groupmanager {
                             return match;
                         });
 
-                        params.total(orderedData.length);
-                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                        params.total(filteredData.length);
+                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                     }
                 });
 
-            vm.usersTable = new ngTableParams({
+            vm.usersTable = new NgTableParams({
                 page: 1,            // show first page
                 count: 30,           // count per page
                 sorting: {
@@ -126,18 +126,16 @@ module ap.groupmanager {
                 }
             }, {
                     total: vm.users.all.length, // length of data
-                    getData: function($defer, params) {
-                        console.time('Filtering');
-                        // use build-in angular filter
-                        var orderedData = vm.users.all;
-                        orderedData = $filter('filter')(orderedData, function(record) {
-                            var match = false;
+                    getData: function(params) {
+                        let orderedData = vm.users.all;
+                        let filteredData = $filter('filter')(orderedData, function(record) {
+                            let match = false;
 
                             if (vm.userFilter === '') {
                                 return true;
                             }
-                            var textFields = ['ID', 'Name', 'Email'];
-                            var searchStringLowerCase = vm.userFilter.toLowerCase();
+                            let textFields = ['ID', 'Name', 'Email'];
+                            let searchStringLowerCase = vm.userFilter.toLowerCase();
                             _.each(textFields, function(fieldName) {
                                 if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
                                     match = true;
@@ -147,7 +145,7 @@ module ap.groupmanager {
                         });
 
                         params.total(orderedData.length);
-                        $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
                     }
                 });
         }
@@ -158,7 +156,7 @@ module ap.groupmanager {
         }
 
         getGroupCollection() {
-            var deferred = $q.defer();
+            let deferred = $q.defer();
             apDataService.getCollection({
                 webUrl: vm.siteUrl,
                 operation: 'GetGroupCollectionFromSite'
@@ -170,7 +168,7 @@ module ap.groupmanager {
         }
 
         getUserCollection() {
-            var deferred = $q.defer();
+            let deferred = $q.defer();
             apDataService.getCollection({
                 webUrl: vm.siteUrl,
                 operation: 'GetUserCollectionFromSite'
@@ -207,7 +205,7 @@ module ap.groupmanager {
 
 
         updateAvailableGroups() {
-            var deferred = $q.defer();
+            let deferred = $q.defer();
             toastr.info('Retrieving an updated list of groups for the current user');
             apDataService.getCollection({
                 webUrl: vm.siteUrl,
@@ -222,7 +220,7 @@ module ap.groupmanager {
         }
 
         updateAvailableUsers(group: IXMLGroup) {
-            var deferred = $q.defer();
+            let deferred = $q.defer();
 
             toastr.info('Retrieving an updated list of users for the current group');
             apDataService.getCollection({
@@ -250,16 +248,16 @@ module ap.groupmanager {
          * @returns {Promise.promise|*}
          */
         updatePermissions(operation: string, usersArray: IXMLUser[], groupsArray: IXMLGroup[]) {
-            var deferredPermissionsUpdate = $q.defer();
+            let deferredPermissionsUpdate = $q.defer();
 
             if (!usersArray.length) {
                 toastr.warning('Please make a selection');
             } else {
                 toastr.info('Processing your request');
-                var queue = [];
+                let queue = [];
                 _.each(usersArray, function(user: IXMLUser) {
                     _.each(groupsArray, function(group: IXMLGroup) {
-                        var deferred = $q.defer();
+                        let deferred = $q.defer();
 
                         if (apConfig.offline) {
                             //Simulate an async call

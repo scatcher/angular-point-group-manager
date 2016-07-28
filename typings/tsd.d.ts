@@ -9,3 +9,4 @@
 /// <reference path="gulp/gulp.d.ts" />
 /// <reference path="karma-jasmine/karma-jasmine.d.ts" />
 /// <reference path="../bower_components/angular-point/typings/ap.d.ts" />
+/// <reference path="ng-table/ng-table.d.ts" />
