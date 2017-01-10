@@ -5,7 +5,6 @@ import {DataContainer} from './dataContainer';
 import {IXMLGroup, IXMLUser, DataService} from 'angular-point';
 
 export class GroupManagerController {
-    
     static $inject = ['NgTableParams', '$filter', '$timeout', '$q', 'apDataService'];
     activeTab = 'Users';
     assignedOptions = [];
@@ -21,12 +20,12 @@ export class GroupManagerController {
     users = new DataContainer();
     usersTable: Object;
 
-    constructor(
-        private NgTableParams,
-        private $filter: ng.IFilterService,
-        private $timeout: ng.ITimeoutService,
-        private $q: ng.IQService,
-        private apDataService: DataService) { }
+    constructor(private NgTableParams,
+                private $filter: ng.IFilterService,
+                private $timeout: ng.ITimeoutService,
+                private $q: ng.IQService,
+                private apDataService: DataService) {
+    }
 
     $onInit() {
 
@@ -52,7 +51,7 @@ export class GroupManagerController {
         data.assigned.length = 0;
         data.selectedAssigned.length = 0;
 
-        
+
         _.each(data.all, item => {
             if (_.indexOf(map, item.ID) > -1) {
                 // Already assigned
@@ -157,7 +156,7 @@ export class GroupManagerController {
         }).then((response: IXMLUser[]) => {
             // Assume that valid users all have email addresses and services/groups don't
             _.each(response, user => this.users.all.push(user));
-            
+
             deferred.resolve(this.users.all);
         });
         return deferred.promise;
@@ -173,7 +172,7 @@ export class GroupManagerController {
      */
     mergeGroups() {
         this.updatePermissions('AddUserToGroup', this.users.assigned, [this.targetGroup])
-            .then( (promiseArray) => {
+            .then((promiseArray) => {
                 toastr.success(promiseArray.length + ' users successfully merged.');
                 // Reset dropdowns to empty
                 this.sourceGroup = undefined;
@@ -243,7 +242,7 @@ export class GroupManagerController {
                         operation: operation, // AddUserToGroup || RemoveUserFromGroup'
                         groupName: group.Name,
                         userLoginName: user.LoginName
-                    }).then( (response) => {
+                    }).then((response) => {
                         deferred.resolve(response);
                     });
 
@@ -256,7 +255,7 @@ export class GroupManagerController {
             this.groups.clearSelected();
 
             // Resolved when all promises complete
-            this.$q.all(queue).then( (responses) => {
+            this.$q.all(queue).then((responses) => {
                 toastr.success(operation === 'AddUserToGroup' ?
                     'User successfully added' :
                     'User successfully removed');
