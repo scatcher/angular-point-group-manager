@@ -11,41 +11,41 @@
 
 <div class="container">
 <ul class="nav nav-tabs">
-    <li ng-class="{active: vm.activeTab === 'Users'}">
-        <a href ng-click="vm.updateTab('Users')">Users</a>
+    <li ng-class="{active: $ctrl.activeTab === 'Users'}">
+        <a href ng-click="$ctrl.updateTab('Users')">Users</a>
     </li>
-    <li ng-class="{active: vm.activeTab === 'Groups'}">
-        <a href ng-click="vm.updateTab('Groups')">Groups</a>
+    <li ng-class="{active: $ctrl.activeTab === 'Groups'}">
+        <a href ng-click="$ctrl.updateTab('Groups')">Groups</a>
     </li>
-    <li ng-class="{active: vm.activeTab === 'Merge'}">
-        <a href ng-click="vm.activeTab = 'Merge'">Merge</a>
+    <li ng-class="{active: $ctrl.activeTab === 'Merge'}">
+        <a href ng-click="$ctrl.activeTab = 'Merge'">Merge</a>
     </li>
-    <li ng-class="{active: vm.activeTab === 'UserList'}">
-        <a href ng-click="vm.activeTab = 'UserList'">User List</a>
+    <li ng-class="{active: $ctrl.activeTab === 'UserList'}">
+        <a href ng-click="$ctrl.activeTab = 'UserList'">User List</a>
     </li>
-    <li ng-class="{active: vm.activeTab === 'GroupList'}">
-        <a href ng-click="vm.activeTab = 'GroupList'">Group List</a>
+    <li ng-class="{active: $ctrl.activeTab === 'GroupList'}">
+        <a href ng-click="$ctrl.activeTab = 'GroupList'">Group List</a>
     </li>
 </ul>
 
-<div ng-if="vm.activeTab === 'Users'">
+<div ng-if="$ctrl.activeTab === 'Users'">
     <div class="panel panel-default">
         <div class="panel-heading">
             <div class="row">
                 <div class="col-xs-5">
                     <span style="font-weight:bold">Select a Group:</span>
-                    <select class="form-control" ng-model="vm.users.filter"
-                            ng-options="group.Name for group in vm.groups.all"
-                            ng-change="vm.updateAvailableUsers(vm.users.filter)" style="min-width: 100px;"></select>
+                    <select class="form-control" ng-model="$ctrl.users.filter"
+                            ng-options="group.Name for group in $ctrl.groups.all"
+                            ng-change="$ctrl.updateAvailableUsers($ctrl.users.filter)" style="min-width: 100px;"></select>
                 </div>
                 <div class="col-xs-7">
                     <span style="font-weight:bold">Site/Site Collection: </span>
-                    <input class="form-control" ng-model="vm.siteUrl" ng-change="vm.updateAvailableUsers(vm.users.filter)">
+                    <input class="form-control" ng-model="$ctrl.siteUrl" ng-change="$ctrl.updateAvailableUsers($ctrl.users.filter)">
                 </div>
             </div>
-            <div class="row" ng-if="vm.users.filter.Description">
+            <div class="row" ng-if="$ctrl.users.filter.Description">
                 <div class="col-xs-12">
-                    <p class="help-block">Description: {{ vm.users.filter.Description }}</p>
+                    <p class="help-block">Description: {{ $ctrl.users.filter.Description }}</p>
                 </div>
             </div>
         </div>
@@ -61,29 +61,29 @@
             <div class="row">
                 <div class="col-xs-5">
                     <div class="form-group">
-                        <label>Available Users ({{vm.users.available.length}})</label>
-                        <select ng-model="vm.users.selectedAvailable"
-                                ng-options="user.Name for user in vm.users.available"
+                        <label>Available Users ({{$ctrl.users.available.length}})</label>
+                        <select ng-model="$ctrl.users.selectedAvailable"
+                                ng-options="user.Name for user in $ctrl.users.available"
                                 multiple="multiple" class="multiselect form-control"></select>
                     </div>
                 </div>
                 <div class="col-xs-2 text-center" style="padding-top: 175px">
                     <button class="btn btn-default" style="width:80px;"
-                            ng-click="vm.updatePermissions('AddUserToGroup', vm.users.selectedAvailable, [vm.users.filter])"
+                            ng-click="$ctrl.updatePermissions('AddUserToGroup', $ctrl.users.selectedAvailable, [$ctrl.users.filter])"
                             title="Add user">
                         <i class="fa fa-2x fa-angle-double-right"></i>
                     </button>
                     <br/><br/>
                     <button class="btn btn-default" style="width:80px;"
-                            ng-click="vm.updatePermissions('RemoveUserFromGroup', vm.users.selectedAssigned, [vm.users.filter])">
+                            ng-click="$ctrl.updatePermissions('RemoveUserFromGroup', $ctrl.users.selectedAssigned, [$ctrl.users.filter])">
                         <i class="fa fa-2x fa-angle-double-left"></i>
                     </button>
                 </div>
                 <div class="col-xs-5">
                     <div class="form-group">
-                        <label>Assigned Users ({{vm.users.assigned.length}})</label>
-                        <select ng-model="vm.users.selectedAssigned"
-                                ng-options="user.Name for user in vm.users.assigned"
+                        <label>Assigned Users ({{$ctrl.users.assigned.length}})</label>
+                        <select ng-model="$ctrl.users.selectedAssigned"
+                                ng-options="user.Name for user in $ctrl.users.assigned"
                                 multiple="multiple" class="multiselect form-control"></select>
                     </div>
                 </div>
@@ -92,20 +92,20 @@
     </div>
 </div>
 
-<div ng-if="vm.activeTab === 'Groups'">
+<div ng-if="$ctrl.activeTab === 'Groups'">
     <div class="panel panel-default">
         <div class="panel-heading">
             <div class="row">
                 <div class="col-xs-5">
                     <span style="font-weight:bold">Select a User:</span>
-                    <select class="form-control" ng-model="vm.groups.filter"
-                            ng-options="user.Name for user in vm.users.all"
-                            ng-change="vm.updateAvailableGroups(vm.groups.filter)" style="min-width: 100px;"></select>
+                    <select class="form-control" ng-model="$ctrl.groups.filter"
+                            ng-options="user.Name for user in $ctrl.users.all"
+                            ng-change="$ctrl.updateAvailableGroups($ctrl.groups.filter)" style="min-width: 100px;"></select>
                 </div>
                 <div class="col-xs-7">
                     <span style="font-weight:bold">Site/Site Collection: </span>
-                    <input class="form-control" ng-model="vm.siteUrl"
-                           ng-change="vm.updateAvailableGroups(vm.groups.filter)">
+                    <input class="form-control" ng-model="$ctrl.siteUrl"
+                           ng-change="$ctrl.updateAvailableGroups($ctrl.groups.filter)">
                 </div>
             </div>
         </div>
@@ -124,29 +124,29 @@
             <div class="row">
                 <div class="col-xs-5">
                     <div class="form-group">
-                        <label>Available Groups ({{vm.groups.available.length}})</label>
-                        <select ng-model="vm.groups.selectedAvailable"
-                                ng-options="group.Name for group in vm.groups.available"
+                        <label>Available Groups ({{$ctrl.groups.available.length}})</label>
+                        <select ng-model="$ctrl.groups.selectedAvailable"
+                                ng-options="group.Name for group in $ctrl.groups.available"
                                 multiple="multiple" class="multiselect form-control"></select>
                     </div>
                 </div>
                 <div class="col-xs-2 text-center" style="padding-top: 175px">
                     <button class="btn btn-default" style="width:80px;"
-                            ng-click="vm.updatePermissions('AddUserToGroup', [vm.groups.filter], vm.groups.selectedAvailable)"
+                            ng-click="$ctrl.updatePermissions('AddUserToGroup', [$ctrl.groups.filter], $ctrl.groups.selectedAvailable)"
                             title="Add to group">
                         <i class="fa fa-2x fa-angle-double-right"></i>
                     </button>
                     <br/><br/>
                     <button class="btn btn-default" style="width:80px;"
-                            ng-click="vm.updatePermissions('RemoveUserFromGroup', [vm.groups.filter], vm.groups.selectedAssigned)">
+                            ng-click="$ctrl.updatePermissions('RemoveUserFromGroup', [$ctrl.groups.filter], $ctrl.groups.selectedAssigned)">
                         <i class="fa fa-2x fa-angle-double-left"></i>
                     </button>
                 </div>
                 <div class="col-xs-5">
                     <div class="form-group">
-                        <label>Assigned Users ({{vm.users.assigned.length}})</label>
-                        <select ng-model="vm.groups.selectedAssigned"
-                                ng-options="group.Name for group in vm.groups.assigned"
+                        <label>Assigned Users ({{$ctrl.users.assigned.length}})</label>
+                        <select ng-model="$ctrl.groups.selectedAssigned"
+                                ng-options="group.Name for group in $ctrl.groups.assigned"
                                 multiple="multiple" class="multiselect form-control"></select>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
     </div>
 </div>
 
-<div ng-if="vm.activeTab === 'Merge'">
+<div ng-if="$ctrl.activeTab === 'Merge'">
     <div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
@@ -178,9 +178,9 @@
                         <div class="well">
                             <div class="form-group">
                                 <label>Source Group</label>
-                                <select class="form-control" ng-model="vm.sourceGroup"
-                                        ng-options="group.Name for group in vm.groups.all"
-                                        ng-change="vm.updateAvailableUsers(vm.sourceGroup)"
+                                <select class="form-control" ng-model="$ctrl.sourceGroup"
+                                        ng-options="group.Name for group in $ctrl.groups.all"
+                                        ng-change="$ctrl.updateAvailableUsers($ctrl.sourceGroup)"
                                         style="min-width: 100px;"></select>
                             </div>
                         </div>
@@ -193,8 +193,8 @@
                         <div class="well">
                             <div class="form-group">
                                 <label>Source Group</label>
-                                <select class="form-control" ng-model="vm.targetGroup"
-                                        ng-options="group.Name for group in vm.groups.all"
+                                <select class="form-control" ng-model="$ctrl.targetGroup"
+                                        ng-options="group.Name for group in $ctrl.groups.all"
                                         style="min-width: 100px;"></select>
                             </div>
                         </div>
@@ -204,8 +204,8 @@
                     <fieldset>
                         <legend>Step 3</legend>
                         <button class="btn btn-success"
-                                ng-disabled="vm.sourceGroup.length < 1 || vm.targetGroup.length < 1"
-                                ng-click="vm.mergeGroups()"
+                                ng-disabled="$ctrl.sourceGroup.length < 1 || $ctrl.targetGroup.length < 1"
+                                ng-click="$ctrl.mergeGroups()"
                                 title="Copy all members from the source group over to the destination group.">
                             <i class="fa fa-2x fa-magic"></i> Merge
                         </button>
@@ -215,19 +215,19 @@
         </div>
     </div>
 </div>
-<div ng-if="vm.activeTab === 'UserList'">
+<div ng-if="$ctrl.activeTab === 'UserList'">
     <div class="panel panel-default">
         <div class="panel-heading">
             <span style="font-weight:bold">User Filter</span>
-            <input type="text" class="form-control" ng-model="vm.userFilter"
-                   ng-change="vm.usersTable.reload()">
+            <input type="text" class="form-control" ng-model="$ctrl.userFilter"
+                   ng-change="$ctrl.usersTable.reload()">
         </div>
-        <table ng-table="vm.usersTable" class="table" template-pagination="custom/pager">
+        <table ng-table="$ctrl.usersTable" class="table" template-pagination="custom/pager">
             <tr ng-repeat="user in $data">
                 <td data-title="'ID'"> {{ user.ID }}</td>
                 <td data-title="'Name'">
-                    <a href ng-click="vm.userDetailsLink(user)"
-                       ng-bind-html="user.Name |  highlight:vm.userFilter"></a>
+                    <a href ng-click="$ctrl.userDetailsLink(user)"
+                       ng-bind-html="user.Name |  highlight:$ctrl.userFilter"></a>
                 </td>
                 <td data-title="'Email'"> {{ user.Email }}</td>
             </tr>
@@ -235,21 +235,21 @@
         </table>
     </div>
 </div>
-<div ng-if="vm.activeTab === 'GroupList'">
+<div ng-if="$ctrl.activeTab === 'GroupList'">
     <div class="panel panel-default">
         <div class="panel-heading">
             <span style="font-weight:bold">Group Filter</span>
-            <input type="text" class="form-control" ng-model="vm.groupFilter"
-                   ng-change="vm.groupsTable.reload()">
+            <input type="text" class="form-control" ng-model="$ctrl.groupFilter"
+                   ng-change="$ctrl.groupsTable.reload()">
         </div>
-        <table ng-table="vm.groupsTable" class="table" template-pagination="custom/pager">
+        <table ng-table="$ctrl.groupsTable" class="table" template-pagination="custom/pager">
             <tr ng-repeat="group in $data">
                 <td data-title="'ID'"> {{ group.ID }}</td>
                 <td data-title="'Name'">
-                    <a href ng-click="vm.groupDetailsLink(group)"
-                       ng-bind-html="group.Name |  highlight:vm.groupFilter"></a>
+                    <a href ng-click="$ctrl.groupDetailsLink(group)"
+                       ng-bind-html="group.Name |  highlight:$ctrl.groupFilter"></a>
                 </td>
-                <td data-title="'Description'"> {{ vm.group.Description }}</td>
+                <td data-title="'Description'"> {{ $ctrl.group.Description }}</td>
             </tr>
         </table>
     </div>

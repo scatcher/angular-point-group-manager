@@ -1,334 +1,420 @@
-angular.module("angularPoint").run(["$templateCache", function($templateCache) {$templateCache.put("angular-point-group-manager-templates.html","<style type=\"text/css\">\n    select.multiselect {\n        min-height: 400px;\n    }\n\n    .ui-match {\n        background: yellow;\n    }\n</style>\n\n\n<div class=\"container\">\n<ul class=\"nav nav-tabs\">\n    <li ng-class=\"{active: vm.activeTab === \'Users\'}\">\n        <a href ng-click=\"vm.updateTab(\'Users\')\">Users</a>\n    </li>\n    <li ng-class=\"{active: vm.activeTab === \'Groups\'}\">\n        <a href ng-click=\"vm.updateTab(\'Groups\')\">Groups</a>\n    </li>\n    <li ng-class=\"{active: vm.activeTab === \'Merge\'}\">\n        <a href ng-click=\"vm.activeTab = \'Merge\'\">Merge</a>\n    </li>\n    <li ng-class=\"{active: vm.activeTab === \'UserList\'}\">\n        <a href ng-click=\"vm.activeTab = \'UserList\'\">User List</a>\n    </li>\n    <li ng-class=\"{active: vm.activeTab === \'GroupList\'}\">\n        <a href ng-click=\"vm.activeTab = \'GroupList\'\">Group List</a>\n    </li>\n</ul>\n\n<div ng-if=\"vm.activeTab === \'Users\'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <span style=\"font-weight:bold\">Select a Group:</span>\n                    <select class=\"form-control\" ng-model=\"vm.users.filter\"\n                            ng-options=\"group.Name for group in vm.groups.all\"\n                            ng-change=\"vm.updateAvailableUsers(vm.users.filter)\" style=\"min-width: 100px;\"></select>\n                </div>\n                <div class=\"col-xs-7\">\n                    <span style=\"font-weight:bold\">Site/Site Collection: </span>\n                    <input class=\"form-control\" ng-model=\"vm.siteUrl\" ng-change=\"vm.updateAvailableUsers(vm.users.filter)\">\n                </div>\n            </div>\n            <div class=\"row\" ng-if=\"vm.users.filter.Description\">\n                <div class=\"col-xs-12\">\n                    <p class=\"help-block\">Description: {{ vm.users.filter.Description }}</p>\n                </div>\n            </div>\n        </div>\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div colspan=\"3\" class=\"description\">This tab will allow you to quickly assign multiple users to a\n                        selected group.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Available Users ({{vm.users.available.length}})</label>\n                        <select ng-model=\"vm.users.selectedAvailable\"\n                                ng-options=\"user.Name for user in vm.users.available\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n                <div class=\"col-xs-2 text-center\" style=\"padding-top: 175px\">\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"vm.updatePermissions(\'AddUserToGroup\', vm.users.selectedAvailable, [vm.users.filter])\"\n                            title=\"Add user\">\n                        <i class=\"fa fa-2x fa-angle-double-right\"></i>\n                    </button>\n                    <br/><br/>\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"vm.updatePermissions(\'RemoveUserFromGroup\', vm.users.selectedAssigned, [vm.users.filter])\">\n                        <i class=\"fa fa-2x fa-angle-double-left\"></i>\n                    </button>\n                </div>\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Assigned Users ({{vm.users.assigned.length}})</label>\n                        <select ng-model=\"vm.users.selectedAssigned\"\n                                ng-options=\"user.Name for user in vm.users.assigned\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<div ng-if=\"vm.activeTab === \'Groups\'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <span style=\"font-weight:bold\">Select a User:</span>\n                    <select class=\"form-control\" ng-model=\"vm.groups.filter\"\n                            ng-options=\"user.Name for user in vm.users.all\"\n                            ng-change=\"vm.updateAvailableGroups(vm.groups.filter)\" style=\"min-width: 100px;\"></select>\n                </div>\n                <div class=\"col-xs-7\">\n                    <span style=\"font-weight:bold\">Site/Site Collection: </span>\n                    <input class=\"form-control\" ng-model=\"vm.siteUrl\"\n                           ng-change=\"vm.updateAvailableGroups(vm.groups.filter)\">\n                </div>\n            </div>\n        </div>\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div colspan=\"3\" class=\"description\">This page was created to make the process of managing\n                        users/groups within the site\n                        collection more manageable. When a user is selected, the available groups are displayed on the\n                        left and the groups that the user is currently a member of will show on the right. Selecting\n                        multiple groups is supported.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Available Groups ({{vm.groups.available.length}})</label>\n                        <select ng-model=\"vm.groups.selectedAvailable\"\n                                ng-options=\"group.Name for group in vm.groups.available\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n                <div class=\"col-xs-2 text-center\" style=\"padding-top: 175px\">\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"vm.updatePermissions(\'AddUserToGroup\', [vm.groups.filter], vm.groups.selectedAvailable)\"\n                            title=\"Add to group\">\n                        <i class=\"fa fa-2x fa-angle-double-right\"></i>\n                    </button>\n                    <br/><br/>\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"vm.updatePermissions(\'RemoveUserFromGroup\', [vm.groups.filter], vm.groups.selectedAssigned)\">\n                        <i class=\"fa fa-2x fa-angle-double-left\"></i>\n                    </button>\n                </div>\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Assigned Users ({{vm.users.assigned.length}})</label>\n                        <select ng-model=\"vm.groups.selectedAssigned\"\n                                ng-options=\"group.Name for group in vm.groups.assigned\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<div ng-if=\"vm.activeTab === \'Merge\'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div class=\"description\">This tab allows us to copy the members from the \"Source\" group over to\n                        the \"Target\" group.\n                        It\'s not a problem if any of the users already exist in the destination group. Note: This is\n                        a onetime operation\n                        so any additional members added to the Source group will not automatically be added to the\n                        destination group. You will\n                        need to repeat this process.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <fieldset>\n                        <legend>Step 1</legend>\n                        <div class=\"well\">\n                            <div class=\"form-group\">\n                                <label>Source Group</label>\n                                <select class=\"form-control\" ng-model=\"vm.sourceGroup\"\n                                        ng-options=\"group.Name for group in vm.groups.all\"\n                                        ng-change=\"vm.updateAvailableUsers(vm.sourceGroup)\"\n                                        style=\"min-width: 100px;\"></select>\n                            </div>\n                        </div>\n                    </fieldset>\n                </div>\n                <div class=\"col-xs-5\">\n                    <fieldset>\n                        <legend>Step 2</legend>\n\n                        <div class=\"well\">\n                            <div class=\"form-group\">\n                                <label>Source Group</label>\n                                <select class=\"form-control\" ng-model=\"vm.targetGroup\"\n                                        ng-options=\"group.Name for group in vm.groups.all\"\n                                        style=\"min-width: 100px;\"></select>\n                            </div>\n                        </div>\n                    </fieldset>\n                </div>\n                <div class=\"col-xs-2\">\n                    <fieldset>\n                        <legend>Step 3</legend>\n                        <button class=\"btn btn-success\"\n                                ng-disabled=\"vm.sourceGroup.length < 1 || vm.targetGroup.length < 1\"\n                                ng-click=\"vm.mergeGroups()\"\n                                title=\"Copy all members from the source group over to the destination group.\">\n                            <i class=\"fa fa-2x fa-magic\"></i> Merge\n                        </button>\n                    </fieldset>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n<div ng-if=\"vm.activeTab === \'UserList\'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <span style=\"font-weight:bold\">User Filter</span>\n            <input type=\"text\" class=\"form-control\" ng-model=\"vm.userFilter\"\n                   ng-change=\"vm.usersTable.reload()\">\n        </div>\n        <table ng-table=\"vm.usersTable\" class=\"table\" template-pagination=\"custom/pager\">\n            <tr ng-repeat=\"user in $data\">\n                <td data-title=\"\'ID\'\"> {{ user.ID }}</td>\n                <td data-title=\"\'Name\'\">\n                    <a href ng-click=\"vm.userDetailsLink(user)\"\n                       ng-bind-html=\"user.Name |  highlight:vm.userFilter\"></a>\n                </td>\n                <td data-title=\"\'Email\'\"> {{ user.Email }}</td>\n            </tr>\n\n        </table>\n    </div>\n</div>\n<div ng-if=\"vm.activeTab === \'GroupList\'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <span style=\"font-weight:bold\">Group Filter</span>\n            <input type=\"text\" class=\"form-control\" ng-model=\"vm.groupFilter\"\n                   ng-change=\"vm.groupsTable.reload()\">\n        </div>\n        <table ng-table=\"vm.groupsTable\" class=\"table\" template-pagination=\"custom/pager\">\n            <tr ng-repeat=\"group in $data\">\n                <td data-title=\"\'ID\'\"> {{ group.ID }}</td>\n                <td data-title=\"\'Name\'\">\n                    <a href ng-click=\"vm.groupDetailsLink(group)\"\n                       ng-bind-html=\"group.Name |  highlight:vm.groupFilter\"></a>\n                </td>\n                <td data-title=\"\'Description\'\"> {{ vm.group.Description }}</td>\n            </tr>\n        </table>\n    </div>\n</div>\n</div>\n\n<script type=\"text/ng-template\" id=\"custom/pager\">\n    <div class=\"row\">\n        <div class=\"col-xs-12\">\n            <ul class=\"pager ng-cloak\">\n                <li ng-repeat=\"page in pages\"\n                    ng-class=\"{\'disabled\': !page.active}\"\n                    ng-show=\"page.type == \'prev\' || page.type == \'next\'\" ng-switch=\"page.type\">\n                    <a ng-switch-when=\"prev\" ng-click=\"params.page(page.number)\" href=\"\">\n                        <i class=\"fa fa-chevron-left\"></i>\n                    </a>\n                    <a ng-switch-when=\"next\" ng-click=\"params.page(page.number)\" href=\"\">\n                        <i class=\"fa fa-chevron-right\"></i>\n                    </a>\n                </li>\n            </ul>\n        </div>\n    </div>\n</script>");}]);
-var ap;
-(function (ap) {
-    var groupmanager;
-    (function (groupmanager) {
-        'use strict';
-        var DataContainer = (function () {
-            function DataContainer() {
-                this.all = [];
-                this.assigned = [];
-                this.available = [];
-                this.selectedAssigned = [];
-                this.selectedAvailable = [];
-            }
-            DataContainer.prototype.clearSelected = function () {
-                this.selectedAvailable.length = 0;
-                this.selectedAssigned.length = 0;
-            };
-            return DataContainer;
-        })();
-        groupmanager.DataContainer = DataContainer;
-    })(groupmanager = ap.groupmanager || (ap.groupmanager = {}));
-})(ap || (ap = {}));
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory(require("angular-point"), require("lodash"), require("toastr"));
+	else if(typeof define === 'function' && define.amd)
+		define(["angular-point", "lodash", "toastr"], factory);
+	else if(typeof exports === 'object')
+		exports["angular-point-group-manager"] = factory(require("angular-point"), require("lodash"), require("toastr"));
+	else
+		root["angular-point-group-manager"] = factory(root["angular-point"], root["lodash"], root["toastr"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_5__) {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+/******/
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// identity function for calling harmory imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+/******/
+/******/ 	// define getter function for harmory exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		Object.defineProperty(exports, name, {
+/******/ 			configurable: false,
+/******/ 			enumerable: true,
+/******/ 			get: getter
+/******/ 		});
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "/";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
 
-/// <reference path="../typings/tsd.d.ts" />
-var ap;
-(function (ap) {
-    var groupmanager;
-    (function (groupmanager) {
-        'use strict';
-        angular.module('angularPoint')
-            .directive('apGroupManager', GroupManager);
-        function GroupManager() {
-            return {
-                controller: groupmanager.GroupManagerController,
-                controllerAs: 'vm',
-                templateUrl: 'angular-point-group-manager-templates.html'
-            };
-        }
-    })(groupmanager = ap.groupmanager || (ap.groupmanager = {}));
-})(ap || (ap = {}));
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_toastr__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_toastr___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_toastr__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__dataContainer__ = __webpack_require__(2);
+/* unused harmony export GroupManagerController */
+/* harmony export (binding) */ __webpack_require__.d(exports, "a", function() { return GroupManagerComponent; });
 
-/// <reference path="index.ts" />
-/// <reference path="dataContainer.ts" />
-var ap;
-(function (ap) {
-    var groupmanager;
-    (function (groupmanager) {
-        'use strict';
-        var vm, $filter, $q, $timeout, _, apConfig, apDataService, NgTableParams, toastr;
-        var GroupManagerController = (function () {
-            function GroupManagerController($scope, $injector) {
-                this.$scope = $scope;
-                this.activeTab = 'Users';
-                this.assignedOptions = [];
-                this.availableOptions = [];
-                this.groupFilter = '';
-                this.groups = new groupmanager.DataContainer();
-                this.siteUrl = '';
-                this.tabContents = {};
-                this.userFilter = '';
-                this.users = new groupmanager.DataContainer();
-                vm = this;
-                $filter = $injector.get('$filter');
-                NgTableParams = $injector.get('NgTableParams');
-                $q = $injector.get('$q');
-                $timeout = $injector.get('$timeout');
-                apDataService = $injector.get('apDataService');
-                apConfig = $injector.get('apConfig');
-                toastr = $injector.get('toastr');
-                _ = $injector.get('_');
-                vm.activate();
+
+
+var GroupManagerController = (function () {
+    function GroupManagerController(NgTableParams, $filter, $timeout, $q, apDataService) {
+        this.NgTableParams = NgTableParams;
+        this.$filter = $filter;
+        this.$timeout = $timeout;
+        this.$q = $q;
+        this.apDataService = apDataService;
+        this.activeTab = 'Users';
+        this.assignedOptions = [];
+        this.availableOptions = [];
+        this.groupFilter = '';
+        this.groups = new __WEBPACK_IMPORTED_MODULE_2__dataContainer__["a" /* DataContainer */]();
+        this.siteUrl = '';
+        this.tabContents = {};
+        this.userFilter = '';
+        this.users = new __WEBPACK_IMPORTED_MODULE_2__dataContainer__["a" /* DataContainer */]();
+    }
+    GroupManagerController.prototype.$onInit = function () {
+        var _this = this;
+        this.apDataService.getCurrentSite()
+            .then(function (siteUrl) { return _this.siteUrl = siteUrl; });
+        this.$q.all([this.getUserCollection(), this.getGroupCollection()])
+            .then(function () { return _this.updateTab('Users'); });
+        this.buildTables();
+    };
+    GroupManagerController.prototype.buildInputs = function (assignedItems, type) {
+        // Create a quick map to speed up checking in future
+        var map = __WEBPACK_IMPORTED_MODULE_1_lodash__["map"](assignedItems, function (item) { return item.ID; });
+        var available = [];
+        var assigned = [];
+        var data = this[type];
+        // Clear out any existing data
+        data.available.length = 0;
+        data.selectedAvailable.length = 0;
+        data.assigned.length = 0;
+        data.selectedAssigned.length = 0;
+        __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](data.all, function (item) {
+            if (__WEBPACK_IMPORTED_MODULE_1_lodash__["indexOf"](map, item.ID) > -1) {
+                // Already assigned
+                assigned.push(item);
             }
-            GroupManagerController.prototype.activate = function () {
-                apDataService.getCurrentSite()
-                    .then(function (siteUrl) {
-                    vm.siteUrl = siteUrl;
-                });
-                $q.all([vm.getUserCollection(), vm.getGroupCollection()])
-                    .then(function () {
-                    vm.updateTab('Users');
-                });
-                vm.buildTables();
-            };
-            GroupManagerController.prototype.buildInputs = function (assignedItems, type) {
-                var map = [];
-                var available = [];
-                var assigned = [];
-                var data = vm[type];
-                //Clear out any existing data
-                data.available.length = 0;
-                data.selectedAvailable.length = 0;
-                data.assigned.length = 0;
-                data.selectedAssigned.length = 0;
-                //Create a quick map to speed up checking in future
-                _.each(assignedItems, function (item) {
-                    map.push(item.ID);
-                });
-                _.each(data.all, function (item) {
-                    if (_.indexOf(map, item.ID) > -1) {
-                        //Already assigned
-                        assigned.push(item);
+            else {
+                available.push(item);
+            }
+        });
+        Array.prototype.push.apply(data.available, available);
+        Array.prototype.push.apply(data.assigned, assigned);
+    };
+    GroupManagerController.prototype.buildTables = function () {
+        var _this = this;
+        this.groupsTable = new this.NgTableParams({
+            page: 1,
+            count: 30,
+            sorting: {
+                title: 'asc'
+            }
+        }, {
+            total: this.groups.all.length,
+            getData: function (params) {
+                // use build-in angular filter
+                var orderedData = _this.groups.all;
+                var filteredData = _this.$filter('filter')(orderedData, function (record) {
+                    var match = false;
+                    if (_this.groupFilter === '') {
+                        return true;
                     }
-                    else {
-                        available.push(item);
-                    }
-                });
-                Array.prototype.push.apply(data.available, available);
-                Array.prototype.push.apply(data.assigned, assigned);
-            };
-            GroupManagerController.prototype.buildTables = function () {
-                vm.groupsTable = new NgTableParams({
-                    page: 1,
-                    count: 30,
-                    sorting: {
-                        title: 'asc'
-                    }
-                }, {
-                    total: vm.groups.all.length,
-                    getData: function (params) {
-                        console.time('Filtering');
-                        // use build-in angular filter
-                        var orderedData = vm.groups.all;
-                        var filteredData = $filter('filter')(orderedData, function (record) {
-                            var match = false;
-                            if (vm.groupFilter === '') {
-                                return true;
-                            }
-                            var textFields = ['ID', 'Name', 'Description'];
-                            var searchStringLowerCase = vm.groupFilter.toLowerCase();
-                            _.each(textFields, function (fieldName) {
-                                if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                                    match = true;
-                                }
-                            });
-                            return match;
-                        });
-                        params.total(filteredData.length);
-                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                    }
-                });
-                vm.usersTable = new NgTableParams({
-                    page: 1,
-                    count: 30,
-                    sorting: {
-                        title: 'asc'
-                    }
-                }, {
-                    total: vm.users.all.length,
-                    getData: function (params) {
-                        var orderedData = vm.users.all;
-                        var filteredData = $filter('filter')(orderedData, function (record) {
-                            var match = false;
-                            if (vm.userFilter === '') {
-                                return true;
-                            }
-                            var textFields = ['ID', 'Name', 'Email'];
-                            var searchStringLowerCase = vm.userFilter.toLowerCase();
-                            _.each(textFields, function (fieldName) {
-                                if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                                    match = true;
-                                }
-                            });
-                            return match;
-                        });
-                        params.total(orderedData.length);
-                        return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                    }
-                });
-            };
-            GroupManagerController.prototype.initializeFilterFields = function () {
-                vm.users.filter = vm.users.filter || vm.groups.all[0];
-                vm.groups.filter = vm.groups.filter || vm.users.all[0];
-            };
-            GroupManagerController.prototype.getGroupCollection = function () {
-                var deferred = $q.defer();
-                apDataService.getCollection({
-                    webUrl: vm.siteUrl,
-                    operation: 'GetGroupCollectionFromSite'
-                }).then(function (response) {
-                    Array.prototype.push.apply(vm.groups.all, response);
-                    deferred.resolve(vm.groups.all);
-                });
-                return deferred.promise;
-            };
-            GroupManagerController.prototype.getUserCollection = function () {
-                var deferred = $q.defer();
-                apDataService.getCollection({
-                    webUrl: vm.siteUrl,
-                    operation: 'GetUserCollectionFromSite'
-                }).then(function (response) {
-                    _.each(response, function (user) {
-                        //Assume that valid users all have email addresses and services/groups don't
-                        // if (user.Email) {
-                        vm.users.all.push(user);
-                        // }
-                    });
-                    deferred.resolve(vm.users.all);
-                });
-                return deferred.promise;
-            };
-            GroupManagerController.prototype.groupDetailsLink = function (group) {
-                vm.users.filter = group;
-                vm.updateTab('Users');
-            };
-            /**
-             * Copy users from one group into another
-             */
-            GroupManagerController.prototype.mergeGroups = function () {
-                vm.updatePermissions('AddUserToGroup', vm.users.assigned, [vm.targetGroup])
-                    .then(function (promiseArray) {
-                    toastr.success(promiseArray.length + ' users successfully merged.');
-                    //Reset dropdowns to empty
-                    vm.sourceGroup = undefined;
-                    vm.targetGroup = undefined;
-                });
-            };
-            GroupManagerController.prototype.updateAvailableGroups = function () {
-                var deferred = $q.defer();
-                toastr.info('Retrieving an updated list of groups for the current user');
-                apDataService.getCollection({
-                    webUrl: vm.siteUrl,
-                    operation: 'GetGroupCollectionFromUser',
-                    userLoginName: vm.groups.filter.LoginName
-                }).then(function (response) {
-                    vm.buildInputs(response, 'groups');
-                    deferred.resolve(response);
-                });
-                return deferred.promise;
-            };
-            GroupManagerController.prototype.updateAvailableUsers = function (group) {
-                var deferred = $q.defer();
-                toastr.info('Retrieving an updated list of users for the current group');
-                apDataService.getCollection({
-                    webUrl: vm.siteUrl,
-                    groupName: group.Name,
-                    operation: 'GetUserCollectionFromGroup'
-                }).then(function (response) {
-                    vm.buildInputs(response, 'users');
-                    deferred.resolve(response);
-                }, function () {
-                    toastr.error('Please verify that you have sufficient permissions to view members of this group');
-                    //No users were returned so display all users as available
-                    deferred.resolve([]);
-                });
-                return deferred.promise;
-            };
-            /**
-             * Can add/remove multiple users to multiple groups asynchronously
-             * @param {string} operation - Either 'AddUserToGroup' || 'RemoveUserFromGroup'
-             * @param {array} usersArray
-             * @param {array} groupsArray
-             * @returns {Promise.promise|*}
-             */
-            GroupManagerController.prototype.updatePermissions = function (operation, usersArray, groupsArray) {
-                var deferredPermissionsUpdate = $q.defer();
-                if (!usersArray.length) {
-                    toastr.warning('Please make a selection');
-                }
-                else {
-                    toastr.info('Processing your request');
-                    var queue = [];
-                    _.each(usersArray, function (user) {
-                        _.each(groupsArray, function (group) {
-                            var deferred = $q.defer();
-                            if (apConfig.offline) {
-                                //Simulate an async call
-                                $timeout(function () {
-                                    //Push option to look like they've been assigned
-                                    //                                destination.push(user);
-                                    //                                //Remove from the available side
-                                    //                                source.splice(source.indexOf(user), 1);
-                                });
-                            }
-                            else {
-                                apDataService.serviceWrapper({
-                                    webUrl: vm.siteUrl,
-                                    filterNode: 'User',
-                                    operation: operation,
-                                    groupName: group.Name,
-                                    userLoginName: user.LoginName
-                                }).then(function (response) {
-                                    deferred.resolve(response);
-                                });
-                            }
-                            queue.push(deferred.promise);
-                        });
-                    });
-                    vm.users.clearSelected();
-                    vm.groups.clearSelected();
-                    //Resolved when all promises complete
-                    $q.all(queue).then(function (responses) {
-                        toastr.success(operation === 'AddUserToGroup' ?
-                            'User successfully added' :
-                            'User successfully removed');
-                        if (!apConfig.offline) {
-                            //Retrieve updated value from the server
-                            if (vm.activeTab === 'Users') {
-                                vm.updateAvailableUsers(vm.users.filter);
-                            }
-                            else {
-                                vm.updateAvailableGroups();
-                            }
+                    var textFields = ['ID', 'Name', 'Description'];
+                    var searchStringLowerCase = _this.groupFilter.toLowerCase();
+                    __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](textFields, function (fieldName) {
+                        if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                            match = true;
                         }
-                        deferredPermissionsUpdate.resolve(responses);
-                    }, function () {
-                        toastr.error('There was a problem removing the user');
                     });
-                }
-                return deferredPermissionsUpdate.promise;
-            };
-            GroupManagerController.prototype.updateTab = function (tab) {
-                vm.initializeFilterFields();
-                vm.activeTab = tab;
-                if (tab === 'Groups') {
-                    vm.updateAvailableGroups().then(function () {
+                    return match;
+                });
+                params.total(filteredData.length);
+                return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+            }
+        });
+        this.usersTable = new this.NgTableParams({
+            page: 1,
+            count: 30,
+            sorting: {
+                title: 'asc'
+            }
+        }, {
+            total: this.users.all.length,
+            getData: function (params) {
+                var orderedData = _this.users.all;
+                var filteredData = _this.$filter('filter')(orderedData, function (record) {
+                    var match = false;
+                    if (_this.userFilter === '') {
+                        return true;
+                    }
+                    var textFields = ['ID', 'Name', 'Email'];
+                    var searchStringLowerCase = _this.userFilter.toLowerCase();
+                    __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](textFields, function (fieldName) {
+                        if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                            match = true;
+                        }
                     });
+                    return match;
+                });
+                params.total(orderedData.length);
+                return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+            }
+        });
+    };
+    GroupManagerController.prototype.initializeFilterFields = function () {
+        this.users.filter = this.users.filter || this.groups.all[0];
+        this.groups.filter = this.groups.filter || this.users.all[0];
+    };
+    GroupManagerController.prototype.getGroupCollection = function () {
+        var _this = this;
+        var deferred = this.$q.defer();
+        this.apDataService.getCollection({
+            webURL: this.siteUrl,
+            operation: 'GetGroupCollectionFromSite'
+        }).then(function (response) {
+            Array.prototype.push.apply(_this.groups.all, response);
+            deferred.resolve(_this.groups.all);
+        });
+        return deferred.promise;
+    };
+    GroupManagerController.prototype.getUserCollection = function () {
+        var _this = this;
+        var deferred = this.$q.defer();
+        this.apDataService.getCollection({
+            webURL: this.siteUrl,
+            operation: 'GetUserCollectionFromSite'
+        }).then(function (response) {
+            // Assume that valid users all have email addresses and services/groups don't
+            __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](response, function (user) { return _this.users.all.push(user); });
+            deferred.resolve(_this.users.all);
+        });
+        return deferred.promise;
+    };
+    GroupManagerController.prototype.groupDetailsLink = function (group) {
+        this.users.filter = group;
+        this.updateTab('Users');
+    };
+    /**
+     * Copy users from one group into another
+     */
+    GroupManagerController.prototype.mergeGroups = function () {
+        var _this = this;
+        this.updatePermissions('AddUserToGroup', this.users.assigned, [this.targetGroup])
+            .then(function (promiseArray) {
+            __WEBPACK_IMPORTED_MODULE_0_toastr__["success"](promiseArray.length + ' users successfully merged.');
+            // Reset dropdowns to empty
+            _this.sourceGroup = undefined;
+            _this.targetGroup = undefined;
+        });
+    };
+    GroupManagerController.prototype.updateAvailableGroups = function () {
+        var _this = this;
+        var deferred = this.$q.defer();
+        __WEBPACK_IMPORTED_MODULE_0_toastr__["info"]('Retrieving an updated list of groups for the current user');
+        this.apDataService.getCollection({
+            webURL: this.siteUrl,
+            operation: 'GetGroupCollectionFromUser',
+            userLoginName: this.groups.filter.LoginName
+        }).then(function (response) {
+            _this.buildInputs(response, 'groups');
+            deferred.resolve(response);
+        });
+        return deferred.promise;
+    };
+    GroupManagerController.prototype.updateAvailableUsers = function (group) {
+        var _this = this;
+        var deferred = this.$q.defer();
+        __WEBPACK_IMPORTED_MODULE_0_toastr__["info"]('Retrieving an updated list of users for the current group');
+        this.apDataService.getCollection({
+            webURL: this.siteUrl,
+            groupName: group.Name,
+            operation: 'GetUserCollectionFromGroup'
+        }).then(function (response) {
+            _this.buildInputs(response, 'users');
+            deferred.resolve(response);
+        }, function (err) {
+            __WEBPACK_IMPORTED_MODULE_0_toastr__["error"]('Please verify that you have sufficient permissions to view members of this group');
+            // No users were returned so display all users as available
+            deferred.resolve([]);
+        });
+        return deferred.promise;
+    };
+    /**
+     * Can add/remove multiple users to multiple groups asynchronously
+     * @param {string} operation - Either 'AddUserToGroup' || 'RemoveUserFromGroup'
+     * @param {array} usersArray
+     * @param {array} groupsArray
+     * @returns {Promise.promise|*}
+     */
+    GroupManagerController.prototype.updatePermissions = function (operation, usersArray, groupsArray) {
+        var _this = this;
+        var deferredPermissionsUpdate = this.$q.defer();
+        if (!usersArray.length) {
+            __WEBPACK_IMPORTED_MODULE_0_toastr__["warning"]('Please make a selection');
+        }
+        else {
+            __WEBPACK_IMPORTED_MODULE_0_toastr__["info"]('Processing your request');
+            var queue_1 = [];
+            __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](usersArray, function (user) {
+                __WEBPACK_IMPORTED_MODULE_1_lodash__["each"](groupsArray, function (group) {
+                    var deferred = _this.$q.defer();
+                    _this.apDataService.serviceWrapper({
+                        webUrl: _this.siteUrl,
+                        filterNode: 'User',
+                        operation: operation,
+                        groupName: group.Name,
+                        userLoginName: user.LoginName
+                    }).then(function (response) {
+                        deferred.resolve(response);
+                    });
+                    queue_1.push(deferred.promise);
+                });
+            });
+            this.users.clearSelected();
+            this.groups.clearSelected();
+            // Resolved when all promises complete
+            this.$q.all(queue_1).then(function (responses) {
+                __WEBPACK_IMPORTED_MODULE_0_toastr__["success"](operation === 'AddUserToGroup' ?
+                    'User successfully added' :
+                    'User successfully removed');
+                // Retrieve updated value from the server
+                if (_this.activeTab === 'Users') {
+                    _this.updateAvailableUsers(_this.users.filter);
                 }
                 else {
-                    vm.updateAvailableUsers(vm.users.filter).then(function () {
-                    });
+                    _this.updateAvailableGroups();
                 }
-            };
-            GroupManagerController.prototype.userDetailsLink = function (user) {
-                vm.groups.filter = user;
-                vm.updateTab('Groups');
-            };
-            return GroupManagerController;
-        })();
-        groupmanager.GroupManagerController = GroupManagerController;
-    })(groupmanager = ap.groupmanager || (ap.groupmanager = {}));
-})(ap || (ap = {}));
+                deferredPermissionsUpdate.resolve(responses);
+            }, function () {
+                __WEBPACK_IMPORTED_MODULE_0_toastr__["error"]('There was a problem removing the user');
+            });
+        }
+        return deferredPermissionsUpdate.promise;
+    };
+    GroupManagerController.prototype.updateTab = function (tab) {
+        this.initializeFilterFields();
+        this.activeTab = tab;
+        if (tab === 'Groups') {
+            this.updateAvailableGroups().then(function () {
+            });
+        }
+        else {
+            this.updateAvailableUsers(this.users.filter).then(function () {
+            });
+        }
+    };
+    GroupManagerController.prototype.userDetailsLink = function (user) {
+        this.groups.filter = user;
+        this.updateTab('Groups');
+    };
+    return GroupManagerController;
+}());
 
-//# sourceMappingURL=angular-point-group-manager.js.map
+GroupManagerController.$inject = ['NgTableParams', '$filter', '$timeout', '$q', 'apDataService'];
+var GroupManagerComponent = {
+    controller: GroupManagerController,
+    template: __webpack_require__(3)
+};
+
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+module.exports = require("angular-point");
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(exports, "a", function() { return DataContainer; });
+var DataContainer = (function () {
+    function DataContainer() {
+        this.all = [];
+        this.assigned = [];
+        this.available = [];
+        this.selectedAssigned = [];
+        this.selectedAvailable = [];
+    }
+    DataContainer.prototype.clearSelected = function () {
+        this.selectedAvailable.length = 0;
+        this.selectedAssigned.length = 0;
+    };
+    return DataContainer;
+}());
+
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+module.exports = "<style type=\"text/css\">\n    select.multiselect {\n        min-height: 400px;\n    }\n\n    .ui-match {\n        background: yellow;\n    }\n</style>\n\n\n<div class=\"container\">\n<ul class=\"nav nav-tabs\">\n    <li ng-class=\"{active: $ctrl.activeTab === 'Users'}\">\n        <a href ng-click=\"$ctrl.updateTab('Users')\">Users</a>\n    </li>\n    <li ng-class=\"{active: $ctrl.activeTab === 'Groups'}\">\n        <a href ng-click=\"$ctrl.updateTab('Groups')\">Groups</a>\n    </li>\n    <li ng-class=\"{active: $ctrl.activeTab === 'Merge'}\">\n        <a href ng-click=\"$ctrl.activeTab = 'Merge'\">Merge</a>\n    </li>\n    <li ng-class=\"{active: $ctrl.activeTab === 'UserList'}\">\n        <a href ng-click=\"$ctrl.activeTab = 'UserList'\">User List</a>\n    </li>\n    <li ng-class=\"{active: $ctrl.activeTab === 'GroupList'}\">\n        <a href ng-click=\"$ctrl.activeTab = 'GroupList'\">Group List</a>\n    </li>\n</ul>\n\n<div ng-if=\"$ctrl.activeTab === 'Users'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <span style=\"font-weight:bold\">Select a Group:</span>\n                    <select class=\"form-control\" ng-model=\"$ctrl.users.filter\"\n                            ng-options=\"group.Name for group in $ctrl.groups.all\"\n                            ng-change=\"$ctrl.updateAvailableUsers($ctrl.users.filter)\" style=\"min-width: 100px;\"></select>\n                </div>\n                <div class=\"col-xs-7\">\n                    <span style=\"font-weight:bold\">Site/Site Collection: </span>\n                    <input class=\"form-control\" ng-model=\"$ctrl.siteUrl\" ng-change=\"$ctrl.updateAvailableUsers($ctrl.users.filter)\">\n                </div>\n            </div>\n            <div class=\"row\" ng-if=\"$ctrl.users.filter.Description\">\n                <div class=\"col-xs-12\">\n                    <p class=\"help-block\">Description: {{ $ctrl.users.filter.Description }}</p>\n                </div>\n            </div>\n        </div>\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div colspan=\"3\" class=\"description\">This tab will allow you to quickly assign multiple users to a\n                        selected group.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Available Users ({{$ctrl.users.available.length}})</label>\n                        <select ng-model=\"$ctrl.users.selectedAvailable\"\n                                ng-options=\"user.Name for user in $ctrl.users.available\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n                <div class=\"col-xs-2 text-center\" style=\"padding-top: 175px\">\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"$ctrl.updatePermissions('AddUserToGroup', $ctrl.users.selectedAvailable, [$ctrl.users.filter])\"\n                            title=\"Add user\">\n                        <i class=\"fa fa-2x fa-angle-double-right\"></i>\n                    </button>\n                    <br/><br/>\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"$ctrl.updatePermissions('RemoveUserFromGroup', $ctrl.users.selectedAssigned, [$ctrl.users.filter])\">\n                        <i class=\"fa fa-2x fa-angle-double-left\"></i>\n                    </button>\n                </div>\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Assigned Users ({{$ctrl.users.assigned.length}})</label>\n                        <select ng-model=\"$ctrl.users.selectedAssigned\"\n                                ng-options=\"user.Name for user in $ctrl.users.assigned\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<div ng-if=\"$ctrl.activeTab === 'Groups'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <span style=\"font-weight:bold\">Select a User:</span>\n                    <select class=\"form-control\" ng-model=\"$ctrl.groups.filter\"\n                            ng-options=\"user.Name for user in $ctrl.users.all\"\n                            ng-change=\"$ctrl.updateAvailableGroups($ctrl.groups.filter)\" style=\"min-width: 100px;\"></select>\n                </div>\n                <div class=\"col-xs-7\">\n                    <span style=\"font-weight:bold\">Site/Site Collection: </span>\n                    <input class=\"form-control\" ng-model=\"$ctrl.siteUrl\"\n                           ng-change=\"$ctrl.updateAvailableGroups($ctrl.groups.filter)\">\n                </div>\n            </div>\n        </div>\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div colspan=\"3\" class=\"description\">This page was created to make the process of managing\n                        users/groups within the site\n                        collection more manageable. When a user is selected, the available groups are displayed on the\n                        left and the groups that the user is currently a member of will show on the right. Selecting\n                        multiple groups is supported.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Available Groups ({{$ctrl.groups.available.length}})</label>\n                        <select ng-model=\"$ctrl.groups.selectedAvailable\"\n                                ng-options=\"group.Name for group in $ctrl.groups.available\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n                <div class=\"col-xs-2 text-center\" style=\"padding-top: 175px\">\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"$ctrl.updatePermissions('AddUserToGroup', [$ctrl.groups.filter], $ctrl.groups.selectedAvailable)\"\n                            title=\"Add to group\">\n                        <i class=\"fa fa-2x fa-angle-double-right\"></i>\n                    </button>\n                    <br/><br/>\n                    <button class=\"btn btn-default\" style=\"width:80px;\"\n                            ng-click=\"$ctrl.updatePermissions('RemoveUserFromGroup', [$ctrl.groups.filter], $ctrl.groups.selectedAssigned)\">\n                        <i class=\"fa fa-2x fa-angle-double-left\"></i>\n                    </button>\n                </div>\n                <div class=\"col-xs-5\">\n                    <div class=\"form-group\">\n                        <label>Assigned Users ({{$ctrl.users.assigned.length}})</label>\n                        <select ng-model=\"$ctrl.groups.selectedAssigned\"\n                                ng-options=\"group.Name for group in $ctrl.groups.assigned\"\n                                multiple=\"multiple\" class=\"multiselect form-control\"></select>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<div ng-if=\"$ctrl.activeTab === 'Merge'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-body\">\n            <div class=\"row\">\n                <div class=\"col-xs-12\">\n                    <div class=\"description\">This tab allows us to copy the members from the \"Source\" group over to\n                        the \"Target\" group.\n                        It's not a problem if any of the users already exist in the destination group. Note: This is\n                        a onetime operation\n                        so any additional members added to the Source group will not automatically be added to the\n                        destination group. You will\n                        need to repeat this process.\n                    </div>\n                </div>\n            </div>\n            <hr class=\"hr-sm\">\n            <div class=\"row\">\n                <div class=\"col-xs-5\">\n                    <fieldset>\n                        <legend>Step 1</legend>\n                        <div class=\"well\">\n                            <div class=\"form-group\">\n                                <label>Source Group</label>\n                                <select class=\"form-control\" ng-model=\"$ctrl.sourceGroup\"\n                                        ng-options=\"group.Name for group in $ctrl.groups.all\"\n                                        ng-change=\"$ctrl.updateAvailableUsers($ctrl.sourceGroup)\"\n                                        style=\"min-width: 100px;\"></select>\n                            </div>\n                        </div>\n                    </fieldset>\n                </div>\n                <div class=\"col-xs-5\">\n                    <fieldset>\n                        <legend>Step 2</legend>\n\n                        <div class=\"well\">\n                            <div class=\"form-group\">\n                                <label>Source Group</label>\n                                <select class=\"form-control\" ng-model=\"$ctrl.targetGroup\"\n                                        ng-options=\"group.Name for group in $ctrl.groups.all\"\n                                        style=\"min-width: 100px;\"></select>\n                            </div>\n                        </div>\n                    </fieldset>\n                </div>\n                <div class=\"col-xs-2\">\n                    <fieldset>\n                        <legend>Step 3</legend>\n                        <button class=\"btn btn-success\"\n                                ng-disabled=\"$ctrl.sourceGroup.length < 1 || $ctrl.targetGroup.length < 1\"\n                                ng-click=\"$ctrl.mergeGroups()\"\n                                title=\"Copy all members from the source group over to the destination group.\">\n                            <i class=\"fa fa-2x fa-magic\"></i> Merge\n                        </button>\n                    </fieldset>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n<div ng-if=\"$ctrl.activeTab === 'UserList'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <span style=\"font-weight:bold\">User Filter</span>\n            <input type=\"text\" class=\"form-control\" ng-model=\"$ctrl.userFilter\"\n                   ng-change=\"$ctrl.usersTable.reload()\">\n        </div>\n        <table ng-table=\"$ctrl.usersTable\" class=\"table\" template-pagination=\"custom/pager\">\n            <tr ng-repeat=\"user in $data\">\n                <td data-title=\"'ID'\"> {{ user.ID }}</td>\n                <td data-title=\"'Name'\">\n                    <a href ng-click=\"$ctrl.userDetailsLink(user)\"\n                       ng-bind-html=\"user.Name |  highlight:$ctrl.userFilter\"></a>\n                </td>\n                <td data-title=\"'Email'\"> {{ user.Email }}</td>\n            </tr>\n\n        </table>\n    </div>\n</div>\n<div ng-if=\"$ctrl.activeTab === 'GroupList'\">\n    <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n            <span style=\"font-weight:bold\">Group Filter</span>\n            <input type=\"text\" class=\"form-control\" ng-model=\"$ctrl.groupFilter\"\n                   ng-change=\"$ctrl.groupsTable.reload()\">\n        </div>\n        <table ng-table=\"$ctrl.groupsTable\" class=\"table\" template-pagination=\"custom/pager\">\n            <tr ng-repeat=\"group in $data\">\n                <td data-title=\"'ID'\"> {{ group.ID }}</td>\n                <td data-title=\"'Name'\">\n                    <a href ng-click=\"$ctrl.groupDetailsLink(group)\"\n                       ng-bind-html=\"group.Name |  highlight:$ctrl.groupFilter\"></a>\n                </td>\n                <td data-title=\"'Description'\"> {{ $ctrl.group.Description }}</td>\n            </tr>\n        </table>\n    </div>\n</div>\n</div>\n\n<script type=\"text/ng-template\" id=\"custom/pager\">\n    <div class=\"row\">\n        <div class=\"col-xs-12\">\n            <ul class=\"pager ng-cloak\">\n                <li ng-repeat=\"page in pages\"\n                    ng-class=\"{'disabled': !page.active}\"\n                    ng-show=\"page.type == 'prev' || page.type == 'next'\" ng-switch=\"page.type\">\n                    <a ng-switch-when=\"prev\" ng-click=\"params.page(page.number)\" href=\"\">\n                        <i class=\"fa fa-chevron-left\"></i>\n                    </a>\n                    <a ng-switch-when=\"next\" ng-click=\"params.page(page.number)\" href=\"\">\n                        <i class=\"fa fa-chevron-right\"></i>\n                    </a>\n                </li>\n            </ul>\n        </div>\n    </div>\n</script>"
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+module.exports = require("lodash");
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+module.exports = require("toastr");
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__groupManager__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_angular_point__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_angular_point___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_angular_point__);
+
+
+__WEBPACK_IMPORTED_MODULE_1_angular_point__["AngularPointModule"]
+    .component('apGroupManager', __WEBPACK_IMPORTED_MODULE_0__groupManager__["a" /* GroupManagerComponent */]);
+
+
+/***/ }
+/******/ ]);
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vd2VicGFjay91bml2ZXJzYWxNb2R1bGVEZWZpbml0aW9uIiwid2VicGFjazovLy93ZWJwYWNrL2Jvb3RzdHJhcCA2YjQ3YWJmNDU0MmU0NjcwOGJmMSIsIndlYnBhY2s6Ly8vLi9zcmMvZ3JvdXBNYW5hZ2VyLnRzIiwid2VicGFjazovLy9leHRlcm5hbCBcImFuZ3VsYXItcG9pbnRcIiIsIndlYnBhY2s6Ly8vLi9zcmMvZGF0YUNvbnRhaW5lci50cyIsIndlYnBhY2s6Ly8vLi9zcmMvYW5ndWxhci1wb2ludC1ncm91cC1tYW5hZ2VyLXRlbXBsYXRlcy5odG1sIiwid2VicGFjazovLy9leHRlcm5hbCBcImxvZGFzaFwiIiwid2VicGFjazovLy9leHRlcm5hbCBcInRvYXN0clwiIiwid2VicGFjazovLy8uL3NyYy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQSxDQUFDO0FBQ0QsTztBQ1ZBO0FBQ0E7O0FBRUE7QUFDQTs7QUFFQTtBQUNBO0FBQ0E7O0FBRUE7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBOztBQUVBO0FBQ0E7O0FBRUE7QUFDQTs7QUFFQTtBQUNBO0FBQ0E7OztBQUdBO0FBQ0E7O0FBRUE7QUFDQTs7QUFFQTtBQUNBLG1EQUEyQyxjQUFjOztBQUV6RDtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQSxZQUFJO0FBQ0o7O0FBRUE7QUFDQTtBQUNBO0FBQ0EsbUNBQTJCLDBCQUEwQixFQUFFO0FBQ3ZELHlDQUFpQyxlQUFlO0FBQ2hEO0FBQ0E7QUFDQTs7QUFFQTtBQUNBLDhEQUFzRCwrREFBK0Q7O0FBRXJIO0FBQ0E7O0FBRUE7QUFDQTs7Ozs7Ozs7Ozs7Ozs7O0FDOURpQztBQUNMO0FBRWtCO0FBRzlDO0lBaUJJLGdDQUNZLGFBQWEsRUFDYixPQUEwQixFQUMxQixRQUE0QixFQUM1QixFQUFnQixFQUNoQixhQUEwQjtR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RSw0QkFBNEIsT0FBTyxtQkFBbUIsNkJBQTZCLE9BQU8sNEZBQTRGLG9DQUFvQyxxR0FBcUcscUNBQXFDLHVHQUF1RyxvQ0FBb0Msc0dBQXNHLHVDQUF1Qyw2R0FBNkcsd0NBQXdDLG9wQkFBb3BCLDRnQkFBNGdCLGtDQUFrQyw4bUJBQThtQiw4QkFBOEIsdWVBQXVlLGdaQUFnWiw2WkFBNlosNkJBQTZCLG03QkFBbTdCLGl1Q0FBaXVDLCtCQUErQiwyZUFBMmUsc1pBQXNaLCtaQUErWiw2QkFBNkIsczREQUFzNEQsNHFCQUE0cUIsZzJDQUFnMkMsV0FBVyxvUkFBb1IsY0FBYywwbUJBQTBtQixZQUFZLDhSQUE4UiwyQkFBMkIsMFRBQTBULHlCQUF5Qiw0aUI7Ozs7OztBQ0F0NFosbUM7Ozs7OztBQ0FBLG1DOzs7Ozs7Ozs7O0FDQXVEO0FBQ0o7QUFFbkQsaUVBQWtCO0tBQ2IsU0FBUyxDQUFDLGdCQUFnQixFQUFFLDRFQUFxQixDQUFDLENBQUMiLCJmaWxlIjoiYW5ndWxhci1wb2ludC1ncm91cC1tYW5hZ2VyLmpzIiwic291cmNlc0NvbnRlbnQiOlsiKGZ1bmN0aW9uIHdlYnBhY2tVbml2ZXJzYWxNb2R1bGVEZWZpbml0aW9uKHJvb3QsIGZhY3RvcnkpIHtcblx0aWYodHlwZW9mIGV4cG9ydHMgPT09ICdvYmplY3QnICYmIHR5cGVvZiBtb2R1bGUgPT09ICdvYmplY3QnKVxuXHRcdG1vZHVsZS5leHBvcnRzID0gZmFjdG9yeShyZXF1aXJlKFwiYW5ndWxhci1wb2ludFwiKSwgcmVxdWlyZShcImxvZGFzaFwiKSwgcmVxdWlyZShcInRvYXN0clwiKSk7XG5cdGVsc2UgaWYodHlwZW9mIGRlZmluZSA9PT0gJ2Z1bmN0aW9uJyAmJiBkZWZpbmUuYW1kKVxuXHRcdGRlZmluZShbXCJhbmd1bGFyLXBvaW50XCIsIFwibG9kYXNoXCIsIFwidG9hc3RyXCJdLCBmYWN0b3J5KTtcblx0ZWxzZSBpZih0eXBlb2YgZXhwb3J0cyA9PT0gJ29iamVjdCcpXG5cdFx0ZXhwb3J0c1tcImFuZ3VsYXItcG9pbnQtZ3JvdXAtbWFuYWdlclwiXSA9IGZhY3RvcnkocmVxdWlyZShcImFuZ3VsYXItcG9pbnRcIiksIHJlcXVpcmUoXCJsb2Rhc2hcIiksIHJlcXVpcmUoXCJ0b2FzdHJcIikpO1xuXHRlbHNlXG5cdFx0cm9vdFtcImFuZ3VsYXItcG9pbnQtZ3JvdXAtbWFuYWdlclwiXSA9IGZhY3Rvcnkocm9vdFtcImFuZ3VsYXItcG9pbnRcIl0sIHJvb3RbXCJsb2Rhc2hcIl0sIHJvb3RbXCJ0b2FzdHJcIl0pO1xufSkodGhpcywgZnVuY3Rpb24oX19XRUJQQUNLX0VYVEVSTkFMX01PRFVMRV8xX18sIF9fV0VCUEFDS19FWFRFUk5BTF9NT0RVTEVfNF9fLCBfX1dFQlBBQ0tfRVhURVJOQUxfTU9EVUxFXzVfXykge1xucmV0dXJuIFxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyB3ZWJwYWNrL3VuaXZlcnNhbE1vZHVsZURlZmluaXRpb24iLCIgXHQvLyBUaGUgbW9kdWxlIGNhY2hlXG4gXHR2YXIgaW5zdGFsbGVkTW9kdWxlcyA9IHt9O1xuXG4gXHQvLyBUaGUgcmVxdWlyZSBmdW5jdGlvblxuIFx0ZnVuY3Rpb24gX193ZWJwYWNrX3JlcXVpcmVfXyhtb2R1bGVJZCkge1xuXG4gXHRcdC8vIENoZWNrIGlmIG1vZHVsZSBpcyBpbiBjYWNoZVxuIFx0XHRpZihpbnN0YWxsZWRNb2R1bGVzW21vZHVsZUlkXSlcbiBcdFx0XHRyZXR1cm4gaW5zdGFsbGVkTW9kdWxlc1ttb2R1bGVJZF0uZXhwb3J0cztcblxuIFx0XHQvLyBDcmVhdGUgYSBuZXcgbW9kdWxlIChhbmQgcHV0IGl0IGludG8gdGhlIGNhY2hlKVxuIFx0XHR2YXIgbW9kdWxlID0gaW5zdGFsbGVkTW9kdWxlc1ttb2R1bGVJZF0gPSB7XG4gXHRcdFx0aTogbW9kdWxlSWQsXG4gXHRcdFx0bDogZmFsc2UsXG4gXHRcdFx0ZXhwb3J0czoge31cbiBcdFx0fTtcblxuIFx0XHQvLyBFeGVjdXRlIHRoZSBtb2R1bGUgZnVuY3Rpb25cbiBcdFx0bW9kdWxlc1ttb2R1bGVJZF0uY2FsbChtb2R1bGUuZXhwb3J0cywgbW9kdWxlLCBtb2R1bGUuZXhwb3J0cywgX193ZWJwYWNrX3JlcXVpcmVfXyk7XG5cbiBcdFx0Ly8gRmxhZyB0aGUgbW9kdWxlIGFzIGxvYWRlZFxuIFx0XHRtb2R1bGUubCA9IHRydWU7XG5cbiBcdFx0Ly8gUmV0dXJuIHRoZSBleHBvcnRzIG9mIHRoZSBtb2R1bGVcbiBcdFx0cmV0dXJuIG1vZHVsZS5leHBvcnRzO1xuIFx0fVxuXG5cbiBcdC8vIGV4cG9zZSB0aGUgbW9kdWxlcyBvYmplY3QgKF9fd2VicGFja19tb2R1bGVzX18pXG4gXHRfX3dlYnBhY2tfcmVxdWlyZV9fLm0gPSBtb2R1bGVzO1xuXG4gXHQvLyBleHBvc2UgdGhlIG1vZHVsZSBjYWNoZVxuIFx0X193ZWJwYWNrX3JlcXVpcmVfXy5jID0gaW5zdGFsbGVkTW9kdWxlcztcblxuIFx0Ly8gaWRlbnRpdHkgZnVuY3Rpb24gZm9yIGNhbGxpbmcgaGFybW9yeSBpbXBvcnRzIHdpdGggdGhlIGNvcnJlY3QgY29udGV4dFxuIFx0X193ZWJwYWNrX3JlcXVpcmVfXy5pID0gZnVuY3Rpb24odmFsdWUpIHsgcmV0dXJuIHZhbHVlOyB9O1xuXG4gXHQvLyBkZWZpbmUgZ2V0dGVyIGZ1bmN0aW9uIGZvciBoYXJtb3J5IGV4cG9ydHNcbiBcdF9fd2VicGFja19yZXF1aXJlX18uZCA9IGZ1bmN0aW9uKGV4cG9ydHMsIG5hbWUsIGdldHRlcikge1xuIFx0XHRPYmplY3QuZGVmaW5lUHJvcGVydHkoZXhwb3J0cywgbmFtZSwge1xuIFx0XHRcdGNvbmZpZ3VyYWJsZTogZmFsc2UsXG4gXHRcdFx0ZW51bWVyYWJsZTogdHJ1ZSxcbiBcdFx0XHRnZXQ6IGdldHRlclxuIFx0XHR9KTtcbiBcdH07XG5cbiBcdC8vIGdldERlZmF1bHRFeHBvcnQgZnVuY3Rpb24gZm9yIGNvbXBhdGliaWxpdHkgd2l0aCBub24taGFybW9ueSBtb2R1bGVzXG4gXHRfX3dlYnBhY2tfcmVxdWlyZV9fLm4gPSBmdW5jdGlvbihtb2R1bGUpIHtcbiBcdFx0dmFyIGdldHRlciA9IG1vZHVsZSAmJiBtb2R1bGUuX19lc01vZHVsZSA/XG4gXHRcdFx0ZnVuY3Rpb24gZ2V0RGVmYXVsdCgpIHsgcmV0dXJuIG1vZHVsZVsnZGVmYXVsdCddOyB9IDpcbiBcdFx0XHRmdW5jdGlvbiBnZXRNb2R1bGVFeHBvcnRzKCkgeyByZXR1cm4gbW9kdWxlOyB9O1xuIFx0XHRfX3dlYnBhY2tfcmVxdWlyZV9fLmQoZ2V0dGVyLCAnYScsIGdldHRlcik7XG4gXHRcdHJldHVybiBnZXR0ZXI7XG4gXHR9O1xuXG4gXHQvLyBPYmplY3QucHJvdG90eXBlLmhhc093blByb3BlcnR5LmNhbGxcbiBcdF9fd2VicGFja19yZXF1aXJlX18ubyA9IGZ1bmN0aW9uKG9iamVjdCwgcHJvcGVydHkpIHsgcmV0dXJuIE9iamVjdC5wcm90b3R5cGUuaGFzT3duUHJvcGVydHkuY2FsbChvYmplY3QsIHByb3BlcnR5KTsgfTtcblxuIFx0Ly8gX193ZWJwYWNrX3B1YmxpY19wYXRoX19cbiBcdF9fd2VicGFja19yZXF1aXJlX18ucCA9IFwiL1wiO1xuXG4gXHQvLyBMb2FkIGVudHJ5IG1vZHVsZSBhbmQgcmV0dXJuIGV4cG9ydHNcbiBcdHJldHVybiBfX3dlYnBhY2tfcmVxdWlyZV9fKF9fd2VicGFja19yZXF1aXJlX18ucyA9IDYpO1xuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIHdlYnBhY2svYm9vdHN0cmFwIDZiNDdhYmY0NTQyZTQ2NzA4YmYxIiwiaW1wb3J0ICogYXMgdG9hc3RyIGZyb20gJ3RvYXN0cic7XG5pbXBvcnQgKiBhcyBfIGZyb20gJ2xvZGFzaCc7XG5pbXBvcnQge05nVGFibGVQYXJhbXMgYXMgSU5nVGFibGVQYXJhbXN9IGZyb20gJ25nLXRhYmxlJztcbmltcG9ydCB7RGF0YUNvbnRhaW5lcn0gZnJvbSAnLi9kYXRhQ29udGFpbmVyJztcbmltcG9ydCB7SVhNTEdyb3VwLCBJWE1MVXNlciwgRGF0YVNlcnZpY2V9IGZyb20gJ2FuZ3VsYXItcG9pbnQnO1xuXG5leHBvcnQgY2xhc3MgR3JvdXBNYW5hZ2VyQ29udHJvbGxlciB7XG4gICAgXG4gICAgc3RhdGljICRpbmplY3QgPSBbJ05nVGFibGVQYXJhbXMnLCAnJGZpbHRlcicsICckdGltZW91dCcsICckcScsICdhcERhdGFTZXJ2aWNlJ107XG4gICAgYWN0aXZlVGFiID0gJ1VzZXJzJztcbiAgICBhc3NpZ25lZE9wdGlvbnMgPSBbXTtcbiAgICBhdmFpbGFibGVPcHRpb25zID0gW107XG4gICAgZ3JvdXBGaWx0ZXIgPSAnJztcbiAgICBncm91cHMgPSBuZXcgRGF0YUNvbnRhaW5lcigpO1xuICAgIGdyb3Vwc1RhYmxlOiBJTmdUYWJsZVBhcmFtczxhbnk+O1xuICAgIHNpdGVVcmwgPSAnJztcbiAgICBzb3VyY2VHcm91cDogSVhNTEdyb3VwO1xuICAgIHRhYkNvbnRlbnRzID0ge307XG4gICAgdGFyZ2V0R3JvdXA6IElYTUxHcm91cDtcbiAgICB1c2VyRmlsdGVyID0gJyc7XG4gICAgdXNlcnMgPSBuZXcgRGF0YUNvbnRhaW5lcigpO1xuICAgIHVzZXJzVGFibGU6IE9iamVjdDtcblxuICAgIGNvbnN0cnVjdG9yKFxuICAgICAgICBwcml2YXRlIE5nVGFibGVQYXJhbXMsXG4gICAgICAgIHByaXZhdGUgJGZpbHRlcjogbmcuSUZpbHRlclNlcnZpY2UsXG4gICAgICAgIHByaXZhdGUgJHRpbWVvdXQ6IG5nLklUaW1lb3V0U2VydmljZSxcbiAgICAgICAgcHJpdmF0ZSAkcTogbmcuSVFTZXJ2aWNlLFxuICAgICAgICBwcml2YXRlIGFwRGF0YVNlcnZpY2U6IERhdGFTZXJ2aWNlKSB7IH1cblxuICAgICRvbkluaXQoKSB7XG5cbiAgICAgICAgdGhpcy5hcERhdGFTZXJ2aWNlLmdldEN1cnJlbnRTaXRlKClcbiAgICAgICAgICAgIC50aGVuKHNpdGVVcmwgPT4gdGhpcy5zaXRlVXJsID0gc2l0ZVVybCk7XG5cbiAgICAgICAgdGhpcy4kcS5hbGwoW3RoaXMuZ2V0VXNlckNvbGxlY3Rpb24oKSwgdGhpcy5nZXRHcm91cENvbGxlY3Rpb24oKV0pXG4gICAgICAgICAgICAudGhlbigoKSA9PiB0aGlzLnVwZGF0ZVRhYignVXNlcnMnKSk7XG5cbiAgICAgICAgdGhpcy5idWlsZFRhYmxlcygpO1xuICAgIH1cblxuICAgIGJ1aWxkSW5wdXRzKGFzc2lnbmVkSXRlbXM6IElYTUxHcm91cFtdIHwgSVhNTFVzZXJbXSwgdHlwZTogJ2dyb3VwcycgfCAndXNlcnMnKSB7XG4gICAgICAgIC8vIENyZWF0ZSBhIHF1aWNrIG1hcCB0byBzcGVlZCB1cCBjaGVja2luZyBpbiBmdXR1cmVcbiAgICAgICAgbGV0IG1hcCA9IF8ubWFwKGFzc2lnbmVkSXRlbXMsIChpdGVtOiBJWE1MVXNlciB8IElYTUxHcm91cCkgPT4gaXRlbS5JRCk7XG4gICAgICAgIGxldCBhdmFpbGFibGUgPSBbXTtcbiAgICAgICAgbGV0IGFzc2lnbmVkID0gW107XG4gICAgICAgIGxldCBkYXRhID0gdGhpc1t0eXBlXTtcblxuICAgICAgICAvLyBDbGVhciBvdXQgYW55IGV4aXN0aW5nIGRhdGFcbiAgICAgICAgZGF0YS5hdmFpbGFibGUubGVuZ3RoID0gMDtcbiAgICAgICAgZGF0YS5zZWxlY3RlZEF2YWlsYWJsZS5sZW5ndGggPSAwO1xuICAgICAgICBkYXRhLmFzc2lnbmVkLmxlbmd0aCA9IDA7XG4gICAgICAgIGRhdGEuc2VsZWN0ZWRBc3NpZ25lZC5sZW5ndGggPSAwO1xuXG4gICAgICAgIFxuICAgICAgICBfLmVhY2goZGF0YS5hbGwsIGl0ZW0gPT4ge1xuICAgICAgICAgICAgaWYgKF8uaW5kZXhPZihtYXAsIGl0ZW0uSUQpID4gLTEpIHtcbiAgICAgICAgICAgICAgICAvLyBBbHJlYWR5IGFzc2lnbmVkXG4gICAgICAgICAgICAgICAgYXNzaWduZWQucHVzaChpdGVtKTtcbiAgICAgICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICAgICAgYXZhaWxhYmxlLnB1c2goaXRlbSk7XG4gICAgICAgICAgICB9XG4gICAgICAgIH0pO1xuXG4gICAgICAgIEFycmF5LnByb3RvdHlwZS5wdXNoLmFwcGx5KGRhdGEuYXZhaWxhYmxlLCBhdmFpbGFibGUpO1xuICAgICAgICBBcnJheS5wcm90b3R5cGUucHVzaC5hcHBseShkYXRhLmFzc2lnbmVkLCBhc3NpZ25lZCk7XG5cbiAgICB9XG5cbiAgICBidWlsZFRhYmxlcygpIHtcbiAgICAgICAgdGhpcy5ncm91cHNUYWJsZSA9IG5ldyB0aGlzLk5nVGFibGVQYXJhbXMoe1xuICAgICAgICAgICAgcGFnZTogMSwgICAgICAgICAgICAvLyBzaG93IGZpcnN0IHBhZ2VcbiAgICAgICAgICAgIGNvdW50OiAzMCwgICAgICAgICAgIC8vIGNvdW50IHBlciBwYWdlXG4gICAgICAgICAgICBzb3J0aW5nOiB7XG4gICAgICAgICAgICAgICAgdGl0bGU6ICdhc2MnXG4gICAgICAgICAgICB9XG4gICAgICAgIH0sIHtcbiAgICAgICAgICAgIHRvdGFsOiB0aGlzLmdyb3Vwcy5hbGwubGVuZ3RoLCAvLyBsZW5ndGggb2YgZGF0YVxuICAgICAgICAgICAgZ2V0RGF0YTogKHBhcmFtcykgPT4ge1xuICAgICAgICAgICAgICAgIC8vIHVzZSBidWlsZC1pbiBhbmd1bGFyIGZpbHRlclxuICAgICAgICAgICAgICAgIGxldCBvcmRlcmVkRGF0YSA9IHRoaXMuZ3JvdXBzLmFsbDtcbiAgICAgICAgICAgICAgICBsZXQgZmlsdGVyZWREYXRhID0gdGhpcy4kZmlsdGVyKCdmaWx0ZXInKShvcmRlcmVkRGF0YSwgKHJlY29yZCkgPT4ge1xuICAgICAgICAgICAgICAgICAgICBsZXQgbWF0Y2ggPSBmYWxzZTtcblxuICAgICAgICAgICAgICAgICAgICBpZiAodGhpcy5ncm91cEZpbHRlciA9PT0gJycpIHtcbiAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiB0cnVlO1xuICAgICAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgICAgICAgIGxldCB0ZXh0RmllbGRzID0gWydJRCcsICdOYW1lJywgJ0Rlc2NyaXB0aW9uJ107XG4gICAgICAgICAgICAgICAgICAgIGxldCBzZWFyY2hTdHJpbmdMb3dlckNhc2UgPSB0aGlzLmdyb3VwRmlsdGVyLnRvTG93ZXJDYXNlKCk7XG4gICAgICAgICAgICAgICAgICAgIF8uZWFjaCh0ZXh0RmllbGRzLCAoZmllbGROYW1lKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgICAgICBpZiAocmVjb3JkW2ZpZWxkTmFtZV0udG9Mb3dlckNhc2UoKS5pbmRleE9mKHNlYXJjaFN0cmluZ0xvd2VyQ2FzZSkgIT09IC0xKSB7XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgbWF0Y2ggPSB0cnVlO1xuICAgICAgICAgICAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgICAgICAgICB9KTtcbiAgICAgICAgICAgICAgICAgICAgcmV0dXJuIG1hdGNoO1xuICAgICAgICAgICAgICAgIH0pO1xuXG4gICAgICAgICAgICAgICAgcGFyYW1zLnRvdGFsKGZpbHRlcmVkRGF0YS5sZW5ndGgpO1xuICAgICAgICAgICAgICAgIHJldHVybiBmaWx0ZXJlZERhdGEuc2xpY2UoKHBhcmFtcy5wYWdlKCkgLSAxKSAqIHBhcmFtcy5jb3VudCgpLCBwYXJhbXMucGFnZSgpICogcGFyYW1zLmNvdW50KCkpO1xuICAgICAgICAgICAgfVxuICAgICAgICB9KTtcblxuICAgICAgICB0aGlzLnVzZXJzVGFibGUgPSBuZXcgdGhpcy5OZ1RhYmxlUGFyYW1zKHtcbiAgICAgICAgICAgIHBhZ2U6IDEsICAgICAgICAgICAgLy8gc2hvdyBmaXJzdCBwYWdlXG4gICAgICAgICAgICBjb3VudDogMzAsICAgICAgICAgICAvLyBjb3VudCBwZXIgcGFnZVxuICAgICAgICAgICAgc29ydGluZzoge1xuICAgICAgICAgICAgICAgIHRpdGxlOiAnYXNjJ1xuICAgICAgICAgICAgfVxuICAgICAgICB9LCB7XG4gICAgICAgICAgICB0b3RhbDogdGhpcy51c2Vycy5hbGwubGVuZ3RoLCAvLyBsZW5ndGggb2YgZGF0YVxuICAgICAgICAgICAgZ2V0RGF0YTogKHBhcmFtcykgPT4ge1xuICAgICAgICAgICAgICAgIGxldCBvcmRlcmVkRGF0YSA9IHRoaXMudXNlcnMuYWxsO1xuICAgICAgICAgICAgICAgIGxldCBmaWx0ZXJlZERhdGEgPSB0aGlzLiRmaWx0ZXIoJ2ZpbHRlcicpKG9yZGVyZWREYXRhLCAocmVjb3JkKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgIGxldCBtYXRjaCA9IGZhbHNlO1xuXG4gICAgICAgICAgICAgICAgICAgIGlmICh0aGlzLnVzZXJGaWx0ZXIgPT09ICcnKSB7XG4gICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTtcbiAgICAgICAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgICAgICAgICBsZXQgdGV4dEZpZWxkcyA9IFsnSUQnLCAnTmFtZScsICdFbWFpbCddO1xuICAgICAgICAgICAgICAgICAgICBsZXQgc2VhcmNoU3RyaW5nTG93ZXJDYXNlID0gdGhpcy51c2VyRmlsdGVyLnRvTG93ZXJDYXNlKCk7XG4gICAgICAgICAgICAgICAgICAgIF8uZWFjaCh0ZXh0RmllbGRzLCAoZmllbGROYW1lKSA9PiB7XG4gICAgICAgICAgICAgICAgICAgICAgICBpZiAocmVjb3JkW2ZpZWxkTmFtZV0udG9Mb3dlckNhc2UoKS5pbmRleE9mKHNlYXJjaFN0cmluZ0xvd2VyQ2FzZSkgIT09IC0xKSB7XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgbWF0Y2ggPSB0cnVlO1xuICAgICAgICAgICAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgICAgICAgICB9KTtcbiAgICAgICAgICAgICAgICAgICAgcmV0dXJuIG1hdGNoO1xuICAgICAgICAgICAgICAgIH0pO1xuXG4gICAgICAgICAgICAgICAgcGFyYW1zLnRvdGFsKG9yZGVyZWREYXRhLmxlbmd0aCk7XG4gICAgICAgICAgICAgICAgcmV0dXJuIGZpbHRlcmVkRGF0YS5zbGljZSgocGFyYW1zLnBhZ2UoKSAtIDEpICogcGFyYW1zLmNvdW50KCksIHBhcmFtcy5wYWdlKCkgKiBwYXJhbXMuY291bnQoKSk7XG4gICAgICAgICAgICB9XG4gICAgICAgIH0pO1xuICAgIH1cblxuICAgIGluaXRpYWxpemVGaWx0ZXJGaWVsZHMoKSB7XG4gICAgICAgIHRoaXMudXNlcnMuZmlsdGVyID0gdGhpcy51c2Vycy5maWx0ZXIgfHwgdGhpcy5ncm91cHMuYWxsWzBdO1xuICAgICAgICB0aGlzLmdyb3Vwcy5maWx0ZXIgPSB0aGlzLmdyb3Vwcy5maWx0ZXIgfHwgdGhpcy51c2Vycy5hbGxbMF07XG4gICAgfVxuXG4gICAgZ2V0R3JvdXBDb2xsZWN0aW9uKCkge1xuICAgICAgICBsZXQgZGVmZXJyZWQgPSB0aGlzLiRxLmRlZmVyKCk7XG4gICAgICAgIHRoaXMuYXBEYXRhU2VydmljZS5nZXRDb2xsZWN0aW9uKHtcbiAgICAgICAgICAgIHdlYlVSTDogdGhpcy5zaXRlVXJsLFxuICAgICAgICAgICAgb3BlcmF0aW9uOiAnR2V0R3JvdXBDb2xsZWN0aW9uRnJvbVNpdGUnXG4gICAgICAgIH0pLnRoZW4oKHJlc3BvbnNlOiBJWE1MR3JvdXBbXSkgPT4ge1xuICAgICAgICAgICAgQXJyYXkucHJvdG90eXBlLnB1c2guYXBwbHkodGhpcy5ncm91cHMuYWxsLCByZXNwb25zZSk7XG4gICAgICAgICAgICBkZWZlcnJlZC5yZXNvbHZlKHRoaXMuZ3JvdXBzLmFsbCk7XG4gICAgICAgIH0pO1xuICAgICAgICByZXR1cm4gZGVmZXJyZWQucHJvbWlzZTtcbiAgICB9XG5cbiAgICBnZXRVc2VyQ29sbGVjdGlvbigpIHtcbiAgICAgICAgbGV0IGRlZmVycmVkID0gdGhpcy4kcS5kZWZlcigpO1xuICAgICAgICB0aGlzLmFwRGF0YVNlcnZpY2UuZ2V0Q29sbGVjdGlvbih7XG4gICAgICAgICAgICB3ZWJVUkw6IHRoaXMuc2l0ZVVybCxcbiAgICAgICAgICAgIG9wZXJhdGlvbjogJ0dldFVzZXJDb2xsZWN0aW9uRnJvbVNpdGUnXG4gICAgICAgIH0pLnRoZW4oKHJlc3BvbnNlOiBJWE1MVXNlcltdKSA9PiB7XG4gICAgICAgICAgICAvLyBBc3N1bWUgdGhhdCB2YWxpZCB1c2VycyBhbGwgaGF2ZSBlbWFpbCBhZGRyZXNzZXMgYW5kIHNlcnZpY2VzL2dyb3VwcyBkb24ndFxuICAgICAgICAgICAgXy5lYWNoKHJlc3BvbnNlLCB1c2VyID0+IHRoaXMudXNlcnMuYWxsLnB1c2godXNlcikpO1xuICAgICAgICAgICAgXG4gICAgICAgICAgICBkZWZlcnJlZC5yZXNvbHZlKHRoaXMudXNlcnMuYWxsKTtcbiAgICAgICAgfSk7XG4gICAgICAgIHJldHVybiBkZWZlcnJlZC5wcm9taXNlO1xuICAgIH1cblxuICAgIGdyb3VwRGV0YWlsc0xpbmsoZ3JvdXA6IElYTUxHcm91cCkge1xuICAgICAgICB0aGlzLnVzZXJzLmZpbHRlciA9IGdyb3VwO1xuICAgICAgICB0aGlzLnVwZGF0ZVRhYignVXNlcnMnKTtcbiAgICB9XG5cbiAgICAvKipcbiAgICAgKiBDb3B5IHVzZXJzIGZyb20gb25lIGdyb3VwIGludG8gYW5vdGhlclxuICAgICAqL1xuICAgIG1lcmdlR3JvdXBzKCkge1xuICAgICAgICB0aGlzLnVwZGF0ZVBlcm1pc3Npb25zKCdBZGRVc2VyVG9Hcm91cCcsIHRoaXMudXNlcnMuYXNzaWduZWQsIFt0aGlzLnRhcmdldEdyb3VwXSlcbiAgICAgICAgICAgIC50aGVuKCAocHJvbWlzZUFycmF5KSA9PiB7XG4gICAgICAgICAgICAgICAgdG9hc3RyLnN1Y2Nlc3MocHJvbWlzZUFycmF5Lmxlbmd0aCArICcgdXNlcnMgc3VjY2Vzc2Z1bGx5IG1lcmdlZC4nKTtcbiAgICAgICAgICAgICAgICAvLyBSZXNldCBkcm9wZG93bnMgdG8gZW1wdHlcbiAgICAgICAgICAgICAgICB0aGlzLnNvdXJjZUdyb3VwID0gdW5kZWZpbmVkO1xuICAgICAgICAgICAgICAgIHRoaXMudGFyZ2V0R3JvdXAgPSB1bmRlZmluZWQ7XG4gICAgICAgICAgICB9KTtcbiAgICB9XG5cblxuICAgIHVwZGF0ZUF2YWlsYWJsZUdyb3VwcygpIHtcbiAgICAgICAgbGV0IGRlZmVycmVkID0gdGhpcy4kcS5kZWZlcigpO1xuICAgICAgICB0b2FzdHIuaW5mbygnUmV0cmlldmluZyBhbiB1cGRhdGVkIGxpc3Qgb2YgZ3JvdXBzIGZvciB0aGUgY3VycmVudCB1c2VyJyk7XG4gICAgICAgIHRoaXMuYXBEYXRhU2VydmljZS5nZXRDb2xsZWN0aW9uKHtcbiAgICAgICAgICAgIHdlYlVSTDogdGhpcy5zaXRlVXJsLFxuICAgICAgICAgICAgb3BlcmF0aW9uOiAnR2V0R3JvdXBDb2xsZWN0aW9uRnJvbVVzZXInLFxuICAgICAgICAgICAgdXNlckxvZ2luTmFtZTogdGhpcy5ncm91cHMuZmlsdGVyLkxvZ2luTmFtZVxuICAgICAgICB9KS50aGVuKChyZXNwb25zZTogSVhNTEdyb3VwW10pID0+IHtcbiAgICAgICAgICAgIHRoaXMuYnVpbGRJbnB1dHMocmVzcG9uc2UsICdncm91cHMnKTtcbiAgICAgICAgICAgIGRlZmVycmVkLnJlc29sdmUocmVzcG9uc2UpO1xuICAgICAgICB9KTtcblxuICAgICAgICByZXR1cm4gZGVmZXJyZWQucHJvbWlzZTtcbiAgICB9XG5cbiAgICB1cGRhdGVBdmFpbGFibGVVc2Vycyhncm91cDogSVhNTEdyb3VwKSB7XG4gICAgICAgIGxldCBkZWZlcnJlZCA9IHRoaXMuJHEuZGVmZXIoKTtcblxuICAgICAgICB0b2FzdHIuaW5mbygnUmV0cmlldmluZyBhbiB1cGRhdGVkIGxpc3Qgb2YgdXNlcnMgZm9yIHRoZSBjdXJyZW50IGdyb3VwJyk7XG4gICAgICAgIHRoaXMuYXBEYXRhU2VydmljZS5nZXRDb2xsZWN0aW9uKHtcbiAgICAgICAgICAgIHdlYlVSTDogdGhpcy5zaXRlVXJsLFxuICAgICAgICAgICAgZ3JvdXBOYW1lOiBncm91cC5OYW1lLFxuICAgICAgICAgICAgb3BlcmF0aW9uOiAnR2V0VXNlckNvbGxlY3Rpb25Gcm9tR3JvdXAnXG4gICAgICAgIH0pLnRoZW4oKHJlc3BvbnNlOiBJWE1MVXNlcltdKSA9PiB7XG4gICAgICAgICAgICB0aGlzLmJ1aWxkSW5wdXRzKHJlc3BvbnNlLCAndXNlcnMnKTtcbiAgICAgICAgICAgIGRlZmVycmVkLnJlc29sdmUocmVzcG9uc2UpO1xuICAgICAgICB9LCAoZXJyKSA9PiB7XG4gICAgICAgICAgICB0b2FzdHIuZXJyb3IoJ1BsZWFzZSB2ZXJpZnkgdGhhdCB5b3UgaGF2ZSBzdWZmaWNpZW50IHBlcm1pc3Npb25zIHRvIHZpZXcgbWVtYmVycyBvZiB0aGlzIGdyb3VwJyk7XG4gICAgICAgICAgICAvLyBObyB1c2VycyB3ZXJlIHJldHVybmVkIHNvIGRpc3BsYXkgYWxsIHVzZXJzIGFzIGF2YWlsYWJsZVxuICAgICAgICAgICAgZGVmZXJyZWQucmVzb2x2ZShbXSk7XG4gICAgICAgIH0pO1xuXG4gICAgICAgIHJldHVybiBkZWZlcnJlZC5wcm9taXNlO1xuXG4gICAgfVxuXG4gICAgLyoqXG4gICAgICogQ2FuIGFkZC9yZW1vdmUgbXVsdGlwbGUgdXNlcnMgdG8gbXVsdGlwbGUgZ3JvdXBzIGFzeW5jaHJvbm91c2x5XG4gICAgICogQHBhcmFtIHtzdHJpbmd9IG9wZXJhdGlvbiAtIEVpdGhlciAnQWRkVXNlclRvR3JvdXAnIHx8ICdSZW1vdmVVc2VyRnJvbUdyb3VwJ1xuICAgICAqIEBwYXJhbSB7YXJyYXl9IHVzZXJzQXJyYXlcbiAgICAgKiBAcGFyYW0ge2FycmF5fSBncm91cHNBcnJheVxuICAgICAqIEByZXR1cm5zIHtQcm9taXNlLnByb21pc2V8Kn1cbiAgICAgKi9cbiAgICB1cGRhdGVQZXJtaXNzaW9ucyhvcGVyYXRpb246IHN0cmluZywgdXNlcnNBcnJheTogSVhNTFVzZXJbXSwgZ3JvdXBzQXJyYXk6IElYTUxHcm91cFtdKTogbmcuSVByb21pc2U8T2JqZWN0W10+IHtcbiAgICAgICAgbGV0IGRlZmVycmVkUGVybWlzc2lvbnNVcGRhdGUgPSB0aGlzLiRxLmRlZmVyKCk7XG5cbiAgICAgICAgaWYgKCF1c2Vyc0FycmF5Lmxlbmd0aCkge1xuICAgICAgICAgICAgdG9hc3RyLndhcm5pbmcoJ1BsZWFzZSBtYWtlIGEgc2VsZWN0aW9uJyk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICB0b2FzdHIuaW5mbygnUHJvY2Vzc2luZyB5b3VyIHJlcXVlc3QnKTtcbiAgICAgICAgICAgIGxldCBxdWV1ZSA9IFtdO1xuICAgICAgICAgICAgXy5lYWNoKHVzZXJzQXJyYXksICh1c2VyOiBJWE1MVXNlcikgPT4ge1xuICAgICAgICAgICAgICAgIF8uZWFjaChncm91cHNBcnJheSwgKGdyb3VwOiBJWE1MR3JvdXApID0+IHtcbiAgICAgICAgICAgICAgICAgICAgbGV0IGRlZmVycmVkID0gdGhpcy4kcS5kZWZlcigpO1xuXG4gICAgICAgICAgICAgICAgICAgIHRoaXMuYXBEYXRhU2VydmljZS5zZXJ2aWNlV3JhcHBlcih7XG4gICAgICAgICAgICAgICAgICAgICAgICB3ZWJVcmw6IHRoaXMuc2l0ZVVybCxcbiAgICAgICAgICAgICAgICAgICAgICAgIGZpbHRlck5vZGU6ICdVc2VyJywgICAvLyBMb29rIGZvciBhbGwgeG1sICdVc2VyJyBub2RlcyBhbmQgY29udmVydCB0aG9zZSBpbiB0byBKUyBvYmplY3RzXG4gICAgICAgICAgICAgICAgICAgICAgICBvcGVyYXRpb246IG9wZXJhdGlvbiwgLy8gQWRkVXNlclRvR3JvdXAgfHwgUmVtb3ZlVXNlckZyb21Hcm91cCdcbiAgICAgICAgICAgICAgICAgICAgICAgIGdyb3VwTmFtZTogZ3JvdXAuTmFtZSxcbiAgICAgICAgICAgICAgICAgICAgICAgIHVzZXJMb2dpbk5hbWU6IHVzZXIuTG9naW5OYW1lXG4gICAgICAgICAgICAgICAgICAgIH0pLnRoZW4oIChyZXNwb25zZSkgPT4ge1xuICAgICAgICAgICAgICAgICAgICAgICAgZGVmZXJyZWQucmVzb2x2ZShyZXNwb25zZSk7XG4gICAgICAgICAgICAgICAgICAgIH0pO1xuXG4gICAgICAgICAgICAgICAgICAgIHF1ZXVlLnB1c2goZGVmZXJyZWQucHJvbWlzZSk7XG4gICAgICAgICAgICAgICAgfSk7XG5cbiAgICAgICAgICAgIH0pO1xuXG4gICAgICAgICAgICB0aGlzLnVzZXJzLmNsZWFyU2VsZWN0ZWQoKTtcbiAgICAgICAgICAgIHRoaXMuZ3JvdXBzLmNsZWFyU2VsZWN0ZWQoKTtcblxuICAgICAgICAgICAgLy8gUmVzb2x2ZWQgd2hlbiBhbGwgcHJvbWlzZXMgY29tcGxldGVcbiAgICAgICAgICAgIHRoaXMuJHEuYWxsKHF1ZXVlKS50aGVuKCAocmVzcG9uc2VzKSA9PiB7XG4gICAgICAgICAgICAgICAgdG9hc3RyLnN1Y2Nlc3Mob3BlcmF0aW9uID09PSAnQWRkVXNlclRvR3JvdXAnID9cbiAgICAgICAgICAgICAgICAgICAgJ1VzZXIgc3VjY2Vzc2Z1bGx5IGFkZGVkJyA6XG4gICAgICAgICAgICAgICAgICAgICdVc2VyIHN1Y2Nlc3NmdWxseSByZW1vdmVkJyk7XG5cbiAgICAgICAgICAgICAgICAvLyBSZXRyaWV2ZSB1cGRhdGVkIHZhbHVlIGZyb20gdGhlIHNlcnZlclxuICAgICAgICAgICAgICAgIGlmICh0aGlzLmFjdGl2ZVRhYiA9PT0gJ1VzZXJzJykge1xuICAgICAgICAgICAgICAgICAgICB0aGlzLnVwZGF0ZUF2YWlsYWJsZVVzZXJzKHRoaXMudXNlcnMuZmlsdGVyKTtcbiAgICAgICAgICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgICAgICAgICAgICB0aGlzLnVwZGF0ZUF2YWlsYWJsZUdyb3VwcygpO1xuICAgICAgICAgICAgICAgIH1cblxuICAgICAgICAgICAgICAgIGRlZmVycmVkUGVybWlzc2lvbnNVcGRhdGUucmVzb2x2ZShyZXNwb25zZXMpO1xuXG4gICAgICAgICAgICB9LCAoKSA9PiB7XG4gICAgICAgICAgICAgICAgdG9hc3RyLmVycm9yKCdUaGVyZSB3YXMgYSBwcm9ibGVtIHJlbW92aW5nIHRoZSB1c2VyJyk7XG4gICAgICAgICAgICB9KTtcbiAgICAgICAgfVxuXG4gICAgICAgIHJldHVybiBkZWZlcnJlZFBlcm1pc3Npb25zVXBkYXRlLnByb21pc2U7XG4gICAgfVxuXG4gICAgdXBkYXRlVGFiKHRhYjogc3RyaW5nKSB7XG4gICAgICAgIHRoaXMuaW5pdGlhbGl6ZUZpbHRlckZpZWxkcygpO1xuICAgICAgICB0aGlzLmFjdGl2ZVRhYiA9IHRhYjtcblxuICAgICAgICBpZiAodGFiID09PSAnR3JvdXBzJykge1xuICAgICAgICAgICAgdGhpcy51cGRhdGVBdmFpbGFibGVHcm91cHMoKS50aGVuKGZ1bmN0aW9uICgpIHtcblxuICAgICAgICAgICAgfSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICB0aGlzLnVwZGF0ZUF2YWlsYWJsZVVzZXJzKHRoaXMudXNlcnMuZmlsdGVyKS50aGVuKGZ1bmN0aW9uICgpIHtcblxuICAgICAgICAgICAgfSk7XG4gICAgICAgIH1cbiAgICB9XG5cbiAgICB1c2VyRGV0YWlsc0xpbmsodXNlcikge1xuICAgICAgICB0aGlzLmdyb3Vwcy5maWx0ZXIgPSB1c2VyO1xuICAgICAgICB0aGlzLnVwZGF0ZVRhYignR3JvdXBzJyk7XG4gICAgfVxufVxuXG5leHBvcnQgY29uc3QgR3JvdXBNYW5hZ2VyQ29tcG9uZW50ID0ge1xuICAgIGNvbnRyb2xsZXI6IEdyb3VwTWFuYWdlckNvbnRyb2xsZXIsXG4gICAgdGVtcGxhdGU6IHJlcXVpcmUoJy4vYW5ndWxhci1wb2ludC1ncm91cC1tYW5hZ2VyLXRlbXBsYXRlcy5odG1sJylcbn07XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9+L3RzbGludC1sb2FkZXIhLi9zcmMvZ3JvdXBNYW5hZ2VyLnRzIiwibW9kdWxlLmV4cG9ydHMgPSByZXF1aXJlKFwiYW5ndWxhci1wb2ludFwiKTtcblxuXG4vLy8vLy8vLy8vLy8vLy8vLy9cbi8vIFdFQlBBQ0sgRk9PVEVSXG4vLyBleHRlcm5hbCBcImFuZ3VsYXItcG9pbnRcIlxuLy8gbW9kdWxlIGlkID0gMVxuLy8gbW9kdWxlIGNodW5rcyA9IDAiLCJpbXBvcnQge0lYTUxHcm91cCwgSVhNTFVzZXJ9IGZyb20gJ2FuZ3VsYXItcG9pbnQnO1xuXG5leHBvcnQgY2xhc3MgRGF0YUNvbnRhaW5lciB7XG4gICAgYWxsID0gW107XG4gICAgYXNzaWduZWQgPSBbXTtcbiAgICBhdmFpbGFibGUgPSBbXTtcbiAgICBmaWx0ZXI6IElYTUxHcm91cCB8IElYTUxVc2VyIHwgYW55O1xuICAgIHNlbGVjdGVkQXNzaWduZWQgPSBbXTtcbiAgICBzZWxlY3RlZEF2YWlsYWJsZSA9IFtdO1xuXG4gICAgY2xlYXJTZWxlY3RlZCgpOiB2b2lkIHtcbiAgICAgICAgdGhpcy5zZWxlY3RlZEF2YWlsYWJsZS5sZW5ndGggPSAwO1xuICAgICAgICB0aGlzLnNlbGVjdGVkQXNzaWduZWQubGVuZ3RoID0gMDtcbiAgICB9XG59XG5cblxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyAuL34vdHNsaW50LWxvYWRlciEuL3NyYy9kYXRhQ29udGFpbmVyLnRzIiwibW9kdWxlLmV4cG9ydHMgPSBcIjxzdHlsZSB0eXBlPVxcXCJ0ZXh0L2Nzc1xcXCI+XFxuICAgIHNlbGVjdC5tdWx0aXNlbGVjdCB7XFxuICAgICAgICBtaW4taGVpZ2h0OiA0MDBweDtcXG4gICAgfVxcblxcbiAgICAudWktbWF0Y2gge1xcbiAgICAgICAgYmFja2dyb3VuZDogeWVsbG93O1xcbiAgICB9XFxuPC9zdHlsZT5cXG5cXG5cXG48ZGl2IGNsYXNzPVxcXCJjb250YWluZXJcXFwiPlxcbjx1bCBjbGFzcz1cXFwibmF2IG5hdi10YWJzXFxcIj5cXG4gICAgPGxpIG5nLWNsYXNzPVxcXCJ7YWN0aXZlOiAkY3RybC5hY3RpdmVUYWIgPT09ICdVc2Vycyd9XFxcIj5cXG4gICAgICAgIDxhIGhyZWYgbmctY2xpY2s9XFxcIiRjdHJsLnVwZGF0ZVRhYignVXNlcnMnKVxcXCI+VXNlcnM8L2E+XFxuICAgIDwvbGk+XFxuICAgIDxsaSBuZy1jbGFzcz1cXFwie2FjdGl2ZTogJGN0cmwuYWN0aXZlVGFiID09PSAnR3JvdXBzJ31cXFwiPlxcbiAgICAgICAgPGEgaHJlZiBuZy1jbGljaz1cXFwiJGN0cmwudXBkYXRlVGFiKCdHcm91cHMnKVxcXCI+R3JvdXBzPC9hPlxcbiAgICA8L2xpPlxcbiAgICA8bGkgbmctY2xhc3M9XFxcInthY3RpdmU6ICRjdHJsLmFjdGl2ZVRhYiA9PT0gJ01lcmdlJ31cXFwiPlxcbiAgICAgICAgPGEgaHJlZiBuZy1jbGljaz1cXFwiJGN0cmwuYWN0aXZlVGFiID0gJ01lcmdlJ1xcXCI+TWVyZ2U8L2E+XFxuICAgIDwvbGk+XFxuICAgIDxsaSBuZy1jbGFzcz1cXFwie2FjdGl2ZTogJGN0cmwuYWN0aXZlVGFiID09PSAnVXNlckxpc3QnfVxcXCI+XFxuICAgICAgICA8YSBocmVmIG5nLWNsaWNrPVxcXCIkY3RybC5hY3RpdmVUYWIgPSAnVXNlckxpc3QnXFxcIj5Vc2VyIExpc3Q8L2E+XFxuICAgIDwvbGk+XFxuICAgIDxsaSBuZy1jbGFzcz1cXFwie2FjdGl2ZTogJGN0cmwuYWN0aXZlVGFiID09PSAnR3JvdXBMaXN0J31cXFwiPlxcbiAgICAgICAgPGEgaHJlZiBuZy1jbGljaz1cXFwiJGN0cmwuYWN0aXZlVGFiID0gJ0dyb3VwTGlzdCdcXFwiPkdyb3VwIExpc3Q8L2E+XFxuICAgIDwvbGk+XFxuPC91bD5cXG5cXG48ZGl2IG5nLWlmPVxcXCIkY3RybC5hY3RpdmVUYWIgPT09ICdVc2VycydcXFwiPlxcbiAgICA8ZGl2IGNsYXNzPVxcXCJwYW5lbCBwYW5lbC1kZWZhdWx0XFxcIj5cXG4gICAgICAgIDxkaXYgY2xhc3M9XFxcInBhbmVsLWhlYWRpbmdcXFwiPlxcbiAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcInJvd1xcXCI+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy01XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIHN0eWxlPVxcXCJmb250LXdlaWdodDpib2xkXFxcIj5TZWxlY3QgYSBHcm91cDo8L3NwYW4+XFxuICAgICAgICAgICAgICAgICAgICA8c2VsZWN0IGNsYXNzPVxcXCJmb3JtLWNvbnRyb2xcXFwiIG5nLW1vZGVsPVxcXCIkY3RybC51c2Vycy5maWx0ZXJcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5nLW9wdGlvbnM9XFxcImdyb3VwLk5hbWUgZm9yIGdyb3VwIGluICRjdHJsLmdyb3Vwcy5hbGxcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5nLWNoYW5nZT1cXFwiJGN0cmwudXBkYXRlQXZhaWxhYmxlVXNlcnMoJGN0cmwudXNlcnMuZmlsdGVyKVxcXCIgc3R5bGU9XFxcIm1pbi13aWR0aDogMTAwcHg7XFxcIj48L3NlbGVjdD5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy03XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIHN0eWxlPVxcXCJmb250LXdlaWdodDpib2xkXFxcIj5TaXRlL1NpdGUgQ29sbGVjdGlvbjogPC9zcGFuPlxcbiAgICAgICAgICAgICAgICAgICAgPGlucHV0IGNsYXNzPVxcXCJmb3JtLWNvbnRyb2xcXFwiIG5nLW1vZGVsPVxcXCIkY3RybC5zaXRlVXJsXFxcIiBuZy1jaGFuZ2U9XFxcIiRjdHJsLnVwZGF0ZUF2YWlsYWJsZVVzZXJzKCRjdHJsLnVzZXJzLmZpbHRlcilcXFwiPlxcbiAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiIG5nLWlmPVxcXCIkY3RybC51c2Vycy5maWx0ZXIuRGVzY3JpcHRpb25cXFwiPlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtMTJcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3M9XFxcImhlbHAtYmxvY2tcXFwiPkRlc2NyaXB0aW9uOiB7eyAkY3RybC51c2Vycy5maWx0ZXIuRGVzY3JpcHRpb24gfX08L3A+XFxuICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgPC9kaXY+XFxuICAgICAgICA8ZGl2IGNsYXNzPVxcXCJwYW5lbC1ib2R5XFxcIj5cXG4gICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiPlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtMTJcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjb2xzcGFuPVxcXCIzXFxcIiBjbGFzcz1cXFwiZGVzY3JpcHRpb25cXFwiPlRoaXMgdGFiIHdpbGwgYWxsb3cgeW91IHRvIHF1aWNrbHkgYXNzaWduIG11bHRpcGxlIHVzZXJzIHRvIGFcXG4gICAgICAgICAgICAgICAgICAgICAgICBzZWxlY3RlZCBncm91cC5cXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8aHIgY2xhc3M9XFxcImhyLXNtXFxcIj5cXG4gICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiPlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtNVxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJmb3JtLWdyb3VwXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8bGFiZWw+QXZhaWxhYmxlIFVzZXJzICh7eyRjdHJsLnVzZXJzLmF2YWlsYWJsZS5sZW5ndGh9fSk8L2xhYmVsPlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxzZWxlY3QgbmctbW9kZWw9XFxcIiRjdHJsLnVzZXJzLnNlbGVjdGVkQXZhaWxhYmxlXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctb3B0aW9ucz1cXFwidXNlci5OYW1lIGZvciB1c2VyIGluICRjdHJsLnVzZXJzLmF2YWlsYWJsZVxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG11bHRpcGxlPVxcXCJtdWx0aXBsZVxcXCIgY2xhc3M9XFxcIm11bHRpc2VsZWN0IGZvcm0tY29udHJvbFxcXCI+PC9zZWxlY3Q+XFxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy0yIHRleHQtY2VudGVyXFxcIiBzdHlsZT1cXFwicGFkZGluZy10b3A6IDE3NXB4XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9XFxcImJ0biBidG4tZGVmYXVsdFxcXCIgc3R5bGU9XFxcIndpZHRoOjgwcHg7XFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jbGljaz1cXFwiJGN0cmwudXBkYXRlUGVybWlzc2lvbnMoJ0FkZFVzZXJUb0dyb3VwJywgJGN0cmwudXNlcnMuc2VsZWN0ZWRBdmFpbGFibGUsIFskY3RybC51c2Vycy5maWx0ZXJdKVxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgdGl0bGU9XFxcIkFkZCB1c2VyXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8aSBjbGFzcz1cXFwiZmEgZmEtMnggZmEtYW5nbGUtZG91YmxlLXJpZ2h0XFxcIj48L2k+XFxuICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cXG4gICAgICAgICAgICAgICAgICAgIDxici8+PGJyLz5cXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9XFxcImJ0biBidG4tZGVmYXVsdFxcXCIgc3R5bGU9XFxcIndpZHRoOjgwcHg7XFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jbGljaz1cXFwiJGN0cmwudXBkYXRlUGVybWlzc2lvbnMoJ1JlbW92ZVVzZXJGcm9tR3JvdXAnLCAkY3RybC51c2Vycy5zZWxlY3RlZEFzc2lnbmVkLCBbJGN0cmwudXNlcnMuZmlsdGVyXSlcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxpIGNsYXNzPVxcXCJmYSBmYS0yeCBmYS1hbmdsZS1kb3VibGUtbGVmdFxcXCI+PC9pPlxcbiAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XFxuICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtNVxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJmb3JtLWdyb3VwXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8bGFiZWw+QXNzaWduZWQgVXNlcnMgKHt7JGN0cmwudXNlcnMuYXNzaWduZWQubGVuZ3RofX0pPC9sYWJlbD5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8c2VsZWN0IG5nLW1vZGVsPVxcXCIkY3RybC51c2Vycy5zZWxlY3RlZEFzc2lnbmVkXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctb3B0aW9ucz1cXFwidXNlci5OYW1lIGZvciB1c2VyIGluICRjdHJsLnVzZXJzLmFzc2lnbmVkXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbXVsdGlwbGU9XFxcIm11bHRpcGxlXFxcIiBjbGFzcz1cXFwibXVsdGlzZWxlY3QgZm9ybS1jb250cm9sXFxcIj48L3NlbGVjdD5cXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgIDwvZGl2PlxcbiAgICA8L2Rpdj5cXG48L2Rpdj5cXG5cXG48ZGl2IG5nLWlmPVxcXCIkY3RybC5hY3RpdmVUYWIgPT09ICdHcm91cHMnXFxcIj5cXG4gICAgPGRpdiBjbGFzcz1cXFwicGFuZWwgcGFuZWwtZGVmYXVsdFxcXCI+XFxuICAgICAgICA8ZGl2IGNsYXNzPVxcXCJwYW5lbC1oZWFkaW5nXFxcIj5cXG4gICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiPlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtNVxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBzdHlsZT1cXFwiZm9udC13ZWlnaHQ6Ym9sZFxcXCI+U2VsZWN0IGEgVXNlcjo8L3NwYW4+XFxuICAgICAgICAgICAgICAgICAgICA8c2VsZWN0IGNsYXNzPVxcXCJmb3JtLWNvbnRyb2xcXFwiIG5nLW1vZGVsPVxcXCIkY3RybC5ncm91cHMuZmlsdGVyXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1vcHRpb25zPVxcXCJ1c2VyLk5hbWUgZm9yIHVzZXIgaW4gJGN0cmwudXNlcnMuYWxsXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jaGFuZ2U9XFxcIiRjdHJsLnVwZGF0ZUF2YWlsYWJsZUdyb3VwcygkY3RybC5ncm91cHMuZmlsdGVyKVxcXCIgc3R5bGU9XFxcIm1pbi13aWR0aDogMTAwcHg7XFxcIj48L3NlbGVjdD5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy03XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIHN0eWxlPVxcXCJmb250LXdlaWdodDpib2xkXFxcIj5TaXRlL1NpdGUgQ29sbGVjdGlvbjogPC9zcGFuPlxcbiAgICAgICAgICAgICAgICAgICAgPGlucHV0IGNsYXNzPVxcXCJmb3JtLWNvbnRyb2xcXFwiIG5nLW1vZGVsPVxcXCIkY3RybC5zaXRlVXJsXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgIG5nLWNoYW5nZT1cXFwiJGN0cmwudXBkYXRlQXZhaWxhYmxlR3JvdXBzKCRjdHJsLmdyb3Vwcy5maWx0ZXIpXFxcIj5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICA8L2Rpdj5cXG4gICAgICAgIDxkaXYgY2xhc3M9XFxcInBhbmVsLWJvZHlcXFwiPlxcbiAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcInJvd1xcXCI+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy0xMlxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNvbHNwYW49XFxcIjNcXFwiIGNsYXNzPVxcXCJkZXNjcmlwdGlvblxcXCI+VGhpcyBwYWdlIHdhcyBjcmVhdGVkIHRvIG1ha2UgdGhlIHByb2Nlc3Mgb2YgbWFuYWdpbmdcXG4gICAgICAgICAgICAgICAgICAgICAgICB1c2Vycy9ncm91cHMgd2l0aGluIHRoZSBzaXRlXFxuICAgICAgICAgICAgICAgICAgICAgICAgY29sbGVjdGlvbiBtb3JlIG1hbmFnZWFibGUuIFdoZW4gYSB1c2VyIGlzIHNlbGVjdGVkLCB0aGUgYXZhaWxhYmxlIGdyb3VwcyBhcmUgZGlzcGxheWVkIG9uIHRoZVxcbiAgICAgICAgICAgICAgICAgICAgICAgIGxlZnQgYW5kIHRoZSBncm91cHMgdGhhdCB0aGUgdXNlciBpcyBjdXJyZW50bHkgYSBtZW1iZXIgb2Ygd2lsbCBzaG93IG9uIHRoZSByaWdodC4gU2VsZWN0aW5nXFxuICAgICAgICAgICAgICAgICAgICAgICAgbXVsdGlwbGUgZ3JvdXBzIGlzIHN1cHBvcnRlZC5cXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8aHIgY2xhc3M9XFxcImhyLXNtXFxcIj5cXG4gICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiPlxcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJjb2wteHMtNVxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJmb3JtLWdyb3VwXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8bGFiZWw+QXZhaWxhYmxlIEdyb3VwcyAoe3skY3RybC5ncm91cHMuYXZhaWxhYmxlLmxlbmd0aH19KTwvbGFiZWw+XFxuICAgICAgICAgICAgICAgICAgICAgICAgPHNlbGVjdCBuZy1tb2RlbD1cXFwiJGN0cmwuZ3JvdXBzLnNlbGVjdGVkQXZhaWxhYmxlXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctb3B0aW9ucz1cXFwiZ3JvdXAuTmFtZSBmb3IgZ3JvdXAgaW4gJGN0cmwuZ3JvdXBzLmF2YWlsYWJsZVxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG11bHRpcGxlPVxcXCJtdWx0aXBsZVxcXCIgY2xhc3M9XFxcIm11bHRpc2VsZWN0IGZvcm0tY29udHJvbFxcXCI+PC9zZWxlY3Q+XFxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy0yIHRleHQtY2VudGVyXFxcIiBzdHlsZT1cXFwicGFkZGluZy10b3A6IDE3NXB4XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9XFxcImJ0biBidG4tZGVmYXVsdFxcXCIgc3R5bGU9XFxcIndpZHRoOjgwcHg7XFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jbGljaz1cXFwiJGN0cmwudXBkYXRlUGVybWlzc2lvbnMoJ0FkZFVzZXJUb0dyb3VwJywgWyRjdHJsLmdyb3Vwcy5maWx0ZXJdLCAkY3RybC5ncm91cHMuc2VsZWN0ZWRBdmFpbGFibGUpXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB0aXRsZT1cXFwiQWRkIHRvIGdyb3VwXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8aSBjbGFzcz1cXFwiZmEgZmEtMnggZmEtYW5nbGUtZG91YmxlLXJpZ2h0XFxcIj48L2k+XFxuICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cXG4gICAgICAgICAgICAgICAgICAgIDxici8+PGJyLz5cXG4gICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9XFxcImJ0biBidG4tZGVmYXVsdFxcXCIgc3R5bGU9XFxcIndpZHRoOjgwcHg7XFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jbGljaz1cXFwiJGN0cmwudXBkYXRlUGVybWlzc2lvbnMoJ1JlbW92ZVVzZXJGcm9tR3JvdXAnLCBbJGN0cmwuZ3JvdXBzLmZpbHRlcl0sICRjdHJsLmdyb3Vwcy5zZWxlY3RlZEFzc2lnbmVkKVxcXCI+XFxuICAgICAgICAgICAgICAgICAgICAgICAgPGkgY2xhc3M9XFxcImZhIGZhLTJ4IGZhLWFuZ2xlLWRvdWJsZS1sZWZ0XFxcIj48L2k+XFxuICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy01XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImZvcm0tZ3JvdXBcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxsYWJlbD5Bc3NpZ25lZCBVc2VycyAoe3skY3RybC51c2Vycy5hc3NpZ25lZC5sZW5ndGh9fSk8L2xhYmVsPlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxzZWxlY3QgbmctbW9kZWw9XFxcIiRjdHJsLmdyb3Vwcy5zZWxlY3RlZEFzc2lnbmVkXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctb3B0aW9ucz1cXFwiZ3JvdXAuTmFtZSBmb3IgZ3JvdXAgaW4gJGN0cmwuZ3JvdXBzLmFzc2lnbmVkXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbXVsdGlwbGU9XFxcIm11bHRpcGxlXFxcIiBjbGFzcz1cXFwibXVsdGlzZWxlY3QgZm9ybS1jb250cm9sXFxcIj48L3NlbGVjdD5cXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgIDwvZGl2PlxcbiAgICA8L2Rpdj5cXG48L2Rpdj5cXG5cXG48ZGl2IG5nLWlmPVxcXCIkY3RybC5hY3RpdmVUYWIgPT09ICdNZXJnZSdcXFwiPlxcbiAgICA8ZGl2IGNsYXNzPVxcXCJwYW5lbCBwYW5lbC1kZWZhdWx0XFxcIj5cXG4gICAgICAgIDxkaXYgY2xhc3M9XFxcInBhbmVsLWJvZHlcXFwiPlxcbiAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcInJvd1xcXCI+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy0xMlxcXCI+XFxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJkZXNjcmlwdGlvblxcXCI+VGhpcyB0YWIgYWxsb3dzIHVzIHRvIGNvcHkgdGhlIG1lbWJlcnMgZnJvbSB0aGUgXFxcIlNvdXJjZVxcXCIgZ3JvdXAgb3ZlciB0b1xcbiAgICAgICAgICAgICAgICAgICAgICAgIHRoZSBcXFwiVGFyZ2V0XFxcIiBncm91cC5cXG4gICAgICAgICAgICAgICAgICAgICAgICBJdCdzIG5vdCBhIHByb2JsZW0gaWYgYW55IG9mIHRoZSB1c2VycyBhbHJlYWR5IGV4aXN0IGluIHRoZSBkZXN0aW5hdGlvbiBncm91cC4gTm90ZTogVGhpcyBpc1xcbiAgICAgICAgICAgICAgICAgICAgICAgIGEgb25ldGltZSBvcGVyYXRpb25cXG4gICAgICAgICAgICAgICAgICAgICAgICBzbyBhbnkgYWRkaXRpb25hbCBtZW1iZXJzIGFkZGVkIHRvIHRoZSBTb3VyY2UgZ3JvdXAgd2lsbCBub3QgYXV0b21hdGljYWxseSBiZSBhZGRlZCB0byB0aGVcXG4gICAgICAgICAgICAgICAgICAgICAgICBkZXN0aW5hdGlvbiBncm91cC4gWW91IHdpbGxcXG4gICAgICAgICAgICAgICAgICAgICAgICBuZWVkIHRvIHJlcGVhdCB0aGlzIHByb2Nlc3MuXFxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgPGhyIGNsYXNzPVxcXCJoci1zbVxcXCI+XFxuICAgICAgICAgICAgPGRpdiBjbGFzcz1cXFwicm93XFxcIj5cXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzcz1cXFwiY29sLXhzLTVcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPGZpZWxkc2V0PlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxsZWdlbmQ+U3RlcCAxPC9sZWdlbmQ+XFxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzcz1cXFwid2VsbFxcXCI+XFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImZvcm0tZ3JvdXBcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGxhYmVsPlNvdXJjZSBHcm91cDwvbGFiZWw+XFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8c2VsZWN0IGNsYXNzPVxcXCJmb3JtLWNvbnRyb2xcXFwiIG5nLW1vZGVsPVxcXCIkY3RybC5zb3VyY2VHcm91cFxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctb3B0aW9ucz1cXFwiZ3JvdXAuTmFtZSBmb3IgZ3JvdXAgaW4gJGN0cmwuZ3JvdXBzLmFsbFxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbmctY2hhbmdlPVxcXCIkY3RybC51cGRhdGVBdmFpbGFibGVVc2VycygkY3RybC5zb3VyY2VHcm91cClcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPVxcXCJtaW4td2lkdGg6IDEwMHB4O1xcXCI+PC9zZWxlY3Q+XFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICAgICAgPC9maWVsZHNldD5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy01XFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxmaWVsZHNldD5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8bGVnZW5kPlN0ZXAgMjwvbGVnZW5kPlxcblxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcIndlbGxcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPVxcXCJmb3JtLWdyb3VwXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxsYWJlbD5Tb3VyY2UgR3JvdXA8L2xhYmVsPlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPHNlbGVjdCBjbGFzcz1cXFwiZm9ybS1jb250cm9sXFxcIiBuZy1tb2RlbD1cXFwiJGN0cmwudGFyZ2V0R3JvdXBcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5nLW9wdGlvbnM9XFxcImdyb3VwLk5hbWUgZm9yIGdyb3VwIGluICRjdHJsLmdyb3Vwcy5hbGxcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPVxcXCJtaW4td2lkdGg6IDEwMHB4O1xcXCI+PC9zZWxlY3Q+XFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgICAgICAgICAgPC9maWVsZHNldD5cXG4gICAgICAgICAgICAgICAgPC9kaXY+XFxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9XFxcImNvbC14cy0yXFxcIj5cXG4gICAgICAgICAgICAgICAgICAgIDxmaWVsZHNldD5cXG4gICAgICAgICAgICAgICAgICAgICAgICA8bGVnZW5kPlN0ZXAgMzwvbGVnZW5kPlxcbiAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3M9XFxcImJ0biBidG4tc3VjY2Vzc1xcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5nLWRpc2FibGVkPVxcXCIkY3RybC5zb3VyY2VHcm91cC5sZW5ndGggPCAxIHx8ICRjdHJsLnRhcmdldEdyb3VwLmxlbmd0aCA8IDFcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBuZy1jbGljaz1cXFwiJGN0cmwubWVyZ2VHcm91cHMoKVxcXCJcXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRpdGxlPVxcXCJDb3B5IGFsbCBtZW1iZXJzIGZyb20gdGhlIHNvdXJjZSBncm91cCBvdmVyIHRvIHRoZSBkZXN0aW5hdGlvbiBncm91cC5cXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8aSBjbGFzcz1cXFwiZmEgZmEtMnggZmEtbWFnaWNcXFwiPjwvaT4gTWVyZ2VcXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cXG4gICAgICAgICAgICAgICAgICAgIDwvZmllbGRzZXQ+XFxuICAgICAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgICAgIDwvZGl2PlxcbiAgICAgICAgPC9kaXY+XFxuICAgIDwvZGl2PlxcbjwvZGl2PlxcbjxkaXYgbmctaWY9XFxcIiRjdHJsLmFjdGl2ZVRhYiA9PT0gJ1VzZXJMaXN0J1xcXCI+XFxuICAgIDxkaXYgY2xhc3M9XFxcInBhbmVsIHBhbmVsLWRlZmF1bHRcXFwiPlxcbiAgICAgICAgPGRpdiBjbGFzcz1cXFwicGFuZWwtaGVhZGluZ1xcXCI+XFxuICAgICAgICAgICAgPHNwYW4gc3R5bGU9XFxcImZvbnQtd2VpZ2h0OmJvbGRcXFwiPlVzZXIgRmlsdGVyPC9zcGFuPlxcbiAgICAgICAgICAgIDxpbnB1dCB0eXBlPVxcXCJ0ZXh0XFxcIiBjbGFzcz1cXFwiZm9ybS1jb250cm9sXFxcIiBuZy1tb2RlbD1cXFwiJGN0cmwudXNlckZpbHRlclxcXCJcXG4gICAgICAgICAgICAgICAgICAgbmctY2hhbmdlPVxcXCIkY3RybC51c2Vyc1RhYmxlLnJlbG9hZCgpXFxcIj5cXG4gICAgICAgIDwvZGl2PlxcbiAgICAgICAgPHRhYmxlIG5nLXRhYmxlPVxcXCIkY3RybC51c2Vyc1RhYmxlXFxcIiBjbGFzcz1cXFwidGFibGVcXFwiIHRlbXBsYXRlLXBhZ2luYXRpb249XFxcImN1c3RvbS9wYWdlclxcXCI+XFxuICAgICAgICAgICAgPHRyIG5nLXJlcGVhdD1cXFwidXNlciBpbiAkZGF0YVxcXCI+XFxuICAgICAgICAgICAgICAgIDx0ZCBkYXRhLXRpdGxlPVxcXCInSUQnXFxcIj4ge3sgdXNlci5JRCB9fTwvdGQ+XFxuICAgICAgICAgICAgICAgIDx0ZCBkYXRhLXRpdGxlPVxcXCInTmFtZSdcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPGEgaHJlZiBuZy1jbGljaz1cXFwiJGN0cmwudXNlckRldGFpbHNMaW5rKHVzZXIpXFxcIlxcbiAgICAgICAgICAgICAgICAgICAgICAgbmctYmluZC1odG1sPVxcXCJ1c2VyLk5hbWUgfCAgaGlnaGxpZ2h0OiRjdHJsLnVzZXJGaWx0ZXJcXFwiPjwvYT5cXG4gICAgICAgICAgICAgICAgPC90ZD5cXG4gICAgICAgICAgICAgICAgPHRkIGRhdGEtdGl0bGU9XFxcIidFbWFpbCdcXFwiPiB7eyB1c2VyLkVtYWlsIH19PC90ZD5cXG4gICAgICAgICAgICA8L3RyPlxcblxcbiAgICAgICAgPC90YWJsZT5cXG4gICAgPC9kaXY+XFxuPC9kaXY+XFxuPGRpdiBuZy1pZj1cXFwiJGN0cmwuYWN0aXZlVGFiID09PSAnR3JvdXBMaXN0J1xcXCI+XFxuICAgIDxkaXYgY2xhc3M9XFxcInBhbmVsIHBhbmVsLWRlZmF1bHRcXFwiPlxcbiAgICAgICAgPGRpdiBjbGFzcz1cXFwicGFuZWwtaGVhZGluZ1xcXCI+XFxuICAgICAgICAgICAgPHNwYW4gc3R5bGU9XFxcImZvbnQtd2VpZ2h0OmJvbGRcXFwiPkdyb3VwIEZpbHRlcjwvc3Bhbj5cXG4gICAgICAgICAgICA8aW5wdXQgdHlwZT1cXFwidGV4dFxcXCIgY2xhc3M9XFxcImZvcm0tY29udHJvbFxcXCIgbmctbW9kZWw9XFxcIiRjdHJsLmdyb3VwRmlsdGVyXFxcIlxcbiAgICAgICAgICAgICAgICAgICBuZy1jaGFuZ2U9XFxcIiRjdHJsLmdyb3Vwc1RhYmxlLnJlbG9hZCgpXFxcIj5cXG4gICAgICAgIDwvZGl2PlxcbiAgICAgICAgPHRhYmxlIG5nLXRhYmxlPVxcXCIkY3RybC5ncm91cHNUYWJsZVxcXCIgY2xhc3M9XFxcInRhYmxlXFxcIiB0ZW1wbGF0ZS1wYWdpbmF0aW9uPVxcXCJjdXN0b20vcGFnZXJcXFwiPlxcbiAgICAgICAgICAgIDx0ciBuZy1yZXBlYXQ9XFxcImdyb3VwIGluICRkYXRhXFxcIj5cXG4gICAgICAgICAgICAgICAgPHRkIGRhdGEtdGl0bGU9XFxcIidJRCdcXFwiPiB7eyBncm91cC5JRCB9fTwvdGQ+XFxuICAgICAgICAgICAgICAgIDx0ZCBkYXRhLXRpdGxlPVxcXCInTmFtZSdcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPGEgaHJlZiBuZy1jbGljaz1cXFwiJGN0cmwuZ3JvdXBEZXRhaWxzTGluayhncm91cClcXFwiXFxuICAgICAgICAgICAgICAgICAgICAgICBuZy1iaW5kLWh0bWw9XFxcImdyb3VwLk5hbWUgfCAgaGlnaGxpZ2h0OiRjdHJsLmdyb3VwRmlsdGVyXFxcIj48L2E+XFxuICAgICAgICAgICAgICAgIDwvdGQ+XFxuICAgICAgICAgICAgICAgIDx0ZCBkYXRhLXRpdGxlPVxcXCInRGVzY3JpcHRpb24nXFxcIj4ge3sgJGN0cmwuZ3JvdXAuRGVzY3JpcHRpb24gfX08L3RkPlxcbiAgICAgICAgICAgIDwvdHI+XFxuICAgICAgICA8L3RhYmxlPlxcbiAgICA8L2Rpdj5cXG48L2Rpdj5cXG48L2Rpdj5cXG5cXG48c2NyaXB0IHR5cGU9XFxcInRleHQvbmctdGVtcGxhdGVcXFwiIGlkPVxcXCJjdXN0b20vcGFnZXJcXFwiPlxcbiAgICA8ZGl2IGNsYXNzPVxcXCJyb3dcXFwiPlxcbiAgICAgICAgPGRpdiBjbGFzcz1cXFwiY29sLXhzLTEyXFxcIj5cXG4gICAgICAgICAgICA8dWwgY2xhc3M9XFxcInBhZ2VyIG5nLWNsb2FrXFxcIj5cXG4gICAgICAgICAgICAgICAgPGxpIG5nLXJlcGVhdD1cXFwicGFnZSBpbiBwYWdlc1xcXCJcXG4gICAgICAgICAgICAgICAgICAgIG5nLWNsYXNzPVxcXCJ7J2Rpc2FibGVkJzogIXBhZ2UuYWN0aXZlfVxcXCJcXG4gICAgICAgICAgICAgICAgICAgIG5nLXNob3c9XFxcInBhZ2UudHlwZSA9PSAncHJldicgfHwgcGFnZS50eXBlID09ICduZXh0J1xcXCIgbmctc3dpdGNoPVxcXCJwYWdlLnR5cGVcXFwiPlxcbiAgICAgICAgICAgICAgICAgICAgPGEgbmctc3dpdGNoLXdoZW49XFxcInByZXZcXFwiIG5nLWNsaWNrPVxcXCJwYXJhbXMucGFnZShwYWdlLm51bWJlcilcXFwiIGhyZWY9XFxcIlxcXCI+XFxuICAgICAgICAgICAgICAgICAgICAgICAgPGkgY2xhc3M9XFxcImZhIGZhLWNoZXZyb24tbGVmdFxcXCI+PC9pPlxcbiAgICAgICAgICAgICAgICAgICAgPC9hPlxcbiAgICAgICAgICAgICAgICAgICAgPGEgbmctc3dpdGNoLXdoZW49XFxcIm5leHRcXFwiIG5nLWNsaWNrPVxcXCJwYXJhbXMucGFnZShwYWdlLm51bWJlcilcXFwiIGhyZWY9XFxcIlxcXCI+XFxuICAgICAgICAgICAgICAgICAgICAgICAgPGkgY2xhc3M9XFxcImZhIGZhLWNoZXZyb24tcmlnaHRcXFwiPjwvaT5cXG4gICAgICAgICAgICAgICAgICAgIDwvYT5cXG4gICAgICAgICAgICAgICAgPC9saT5cXG4gICAgICAgICAgICA8L3VsPlxcbiAgICAgICAgPC9kaXY+XFxuICAgIDwvZGl2Plxcbjwvc2NyaXB0PlwiXG5cblxuLy8vLy8vLy8vLy8vLy8vLy8vXG4vLyBXRUJQQUNLIEZPT1RFUlxuLy8gLi9zcmMvYW5ndWxhci1wb2ludC1ncm91cC1tYW5hZ2VyLXRlbXBsYXRlcy5odG1sXG4vLyBtb2R1bGUgaWQgPSAzXG4vLyBtb2R1bGUgY2h1bmtzID0gMCIsIm1vZHVsZS5leHBvcnRzID0gcmVxdWlyZShcImxvZGFzaFwiKTtcblxuXG4vLy8vLy8vLy8vLy8vLy8vLy9cbi8vIFdFQlBBQ0sgRk9PVEVSXG4vLyBleHRlcm5hbCBcImxvZGFzaFwiXG4vLyBtb2R1bGUgaWQgPSA0XG4vLyBtb2R1bGUgY2h1bmtzID0gMCIsIm1vZHVsZS5leHBvcnRzID0gcmVxdWlyZShcInRvYXN0clwiKTtcblxuXG4vLy8vLy8vLy8vLy8vLy8vLy9cbi8vIFdFQlBBQ0sgRk9PVEVSXG4vLyBleHRlcm5hbCBcInRvYXN0clwiXG4vLyBtb2R1bGUgaWQgPSA1XG4vLyBtb2R1bGUgY2h1bmtzID0gMCIsImltcG9ydCB7IEdyb3VwTWFuYWdlckNvbXBvbmVudCB9IGZyb20gJy4vZ3JvdXBNYW5hZ2VyJztcbmltcG9ydCB7IEFuZ3VsYXJQb2ludE1vZHVsZSB9IGZyb20gJ2FuZ3VsYXItcG9pbnQnO1xuXG5Bbmd1bGFyUG9pbnRNb2R1bGVcbiAgICAuY29tcG9uZW50KCdhcEdyb3VwTWFuYWdlcicsIEdyb3VwTWFuYWdlckNvbXBvbmVudCk7XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9+L3RzbGludC1sb2FkZXIhLi9zcmMvaW5kZXgudHMiXSwic291cmNlUm9vdCI6IiJ9

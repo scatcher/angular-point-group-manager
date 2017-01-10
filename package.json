@@ -1,25 +1,37 @@
 {
   "name": "angular-point-group-manager",
-  "version": "2.0.0",
+  "version": "5.0.0",
   "description": "angular-point tool to manage SharePoint users and groups.",
-  "main": "dist/apGroupManager.min.js",
+  "main": "dist/angular-point-group-manager.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "grunt test"
+    "build": "webpack"
+  },
+  "dependencies": {
+    "angular": "~1.6.1",
+    "angular-point": "^5.0.0",
+    "lodash": "^4.17.4",
+    "ng-table": "^3.0.1",
+    "toastr": "^2.1.2"
   },
   "devDependencies": {
-    "browser-sync": "^2.7.13",
-    "gulp": "^3.9.0",
-    "gulp-angular-templatecache": "^1.7.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-typescript": "^2.7.8",
-    "typescript": "^1.5.0-beta"
-  },
-  "engines": {
-    "node": ">=0.10.0"
+    "@types/angular": "~1.5.19",
+    "@types/core-js": "~0.9.35",
+    "@types/hammerjs": "^2.0.34",
+    "@types/jasmine": "~2.5.40",
+    "@types/lodash": "~4.14.45",
+    "@types/node": "^6.0.58",
+    "@types/source-map": "~0.5.0",
+    "@types/toastr": "^2.1.32",
+    "awesome-typescript-loader": "^3.0.0-beta.17",
+    "codelyzer": "^2.0.0-beta.4",
+    "tslint": "^4.3.1",
+    "tslint-loader": "^3.3.0",
+    "typescript": "~2.1.1",
+    "webpack": "2.1.0-beta.27",
+    "webpack-node-externals": "^1.5.4"
   },
   "repository": {
     "type": "git",
