@@ -1,8 +1,9 @@
 import * as toastr from 'toastr';
 import * as _ from 'lodash';
-import {NgTableParams as INgTableParams} from 'ng-table';
-import {DataContainer} from './dataContainer';
-import {IXMLGroup, IXMLUser, DataService} from 'angular-point';
+import { NgTableParams as INgTableParams } from 'ng-table';
+import { XMLGroup, XMLUser, DataService } from 'angular-point';
+
+import { DataContainer } from './dataContainer';
 
 export class GroupManagerController {
     static $inject = ['NgTableParams', '$filter', '$timeout', '$q', 'apDataService'];
@@ -13,18 +14,18 @@ export class GroupManagerController {
     groups = new DataContainer();
     groupsTable: INgTableParams<any>;
     siteUrl = '';
-    sourceGroup: IXMLGroup;
+    sourceGroup: XMLGroup;
     tabContents = {};
-    targetGroup: IXMLGroup;
+    targetGroup: XMLGroup;
     userFilter = '';
     users = new DataContainer();
     usersTable: Object;
 
     constructor(private NgTableParams,
-                private $filter: ng.IFilterService,
-                private $timeout: ng.ITimeoutService,
-                private $q: ng.IQService,
-                private apDataService: DataService) {
+        private $filter: ng.IFilterService,
+        private $timeout: ng.ITimeoutService,
+        private $q: ng.IQService,
+        private apDataService: DataService) {
     }
 
     $onInit() {
@@ -38,9 +39,9 @@ export class GroupManagerController {
         this.buildTables();
     }
 
-    buildInputs(assignedItems: IXMLGroup[] | IXMLUser[], type: 'groups' | 'users') {
+    buildInputs(assignedItems: XMLGroup[] | XMLUser[], type: 'groups' | 'users') {
         // Create a quick map to speed up checking in future
-        let map = _.map(assignedItems, (item: IXMLUser | IXMLGroup) => item.ID);
+        let map = _.map(assignedItems, (item: XMLUser | XMLGroup) => item.ID);
         let available = [];
         let assigned = [];
         let data = this[type];
@@ -74,30 +75,30 @@ export class GroupManagerController {
                 title: 'asc'
             }
         }, {
-            total: this.groups.all.length, // length of data
-            getData: (params) => {
-                // use build-in angular filter
-                let orderedData = this.groups.all;
-                let filteredData = this.$filter('filter')(orderedData, (record) => {
-                    let match = false;
+                total: this.groups.all.length, // length of data
+                getData: (params) => {
+                    // use build-in angular filter
+                    let orderedData = this.groups.all;
+                    let filteredData = this.$filter('filter')(orderedData, (record) => {
+                        let match = false;
 
-                    if (this.groupFilter === '') {
-                        return true;
-                    }
-                    let textFields = ['ID', 'Name', 'Description'];
-                    let searchStringLowerCase = this.groupFilter.toLowerCase();
-                    _.each(textFields, (fieldName) => {
-                        if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                            match = true;
+                        if (this.groupFilter === '') {
+                            return true;
                         }
+                        let textFields = ['ID', 'Name', 'Description'];
+                        let searchStringLowerCase = this.groupFilter.toLowerCase();
+                        _.each(textFields, (fieldName) => {
+                            if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                                match = true;
+                            }
+                        });
+                        return match;
                     });
-                    return match;
-                });
 
-                params.total(filteredData.length);
-                return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-            }
-        });
+                    params.total(filteredData.length);
+                    return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                }
+            });
 
         this.usersTable = new this.NgTableParams({
             page: 1,            // show first page
@@ -106,29 +107,29 @@ export class GroupManagerController {
                 title: 'asc'
             }
         }, {
-            total: this.users.all.length, // length of data
-            getData: (params) => {
-                let orderedData = this.users.all;
-                let filteredData = this.$filter('filter')(orderedData, (record) => {
-                    let match = false;
+                total: this.users.all.length, // length of data
+                getData: (params) => {
+                    let orderedData = this.users.all;
+                    let filteredData = this.$filter('filter')(orderedData, (record) => {
+                        let match = false;
 
-                    if (this.userFilter === '') {
-                        return true;
-                    }
-                    let textFields = ['ID', 'Name', 'Email'];
-                    let searchStringLowerCase = this.userFilter.toLowerCase();
-                    _.each(textFields, (fieldName) => {
-                        if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                            match = true;
+                        if (this.userFilter === '') {
+                            return true;
                         }
+                        let textFields = ['ID', 'Name', 'Email'];
+                        let searchStringLowerCase = this.userFilter.toLowerCase();
+                        _.each(textFields, (fieldName) => {
+                            if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                                match = true;
+                            }
+                        });
+                        return match;
                     });
-                    return match;
-                });
 
-                params.total(orderedData.length);
-                return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-            }
-        });
+                    params.total(orderedData.length);
+                    return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+                }
+            });
     }
 
     initializeFilterFields() {
@@ -141,7 +142,7 @@ export class GroupManagerController {
         this.apDataService.getCollection({
             webURL: this.siteUrl,
             operation: 'GetGroupCollectionFromSite'
-        }).then((response: IXMLGroup[]) => {
+        }).then((response: XMLGroup[]) => {
             Array.prototype.push.apply(this.groups.all, response);
             deferred.resolve(this.groups.all);
         });
@@ -153,7 +154,7 @@ export class GroupManagerController {
         this.apDataService.getCollection({
             webURL: this.siteUrl,
             operation: 'GetUserCollectionFromSite'
-        }).then((response: IXMLUser[]) => {
+        }).then((response: XMLUser[]) => {
             // Assume that valid users all have email addresses and services/groups don't
             _.each(response, user => this.users.all.push(user));
 
@@ -162,7 +163,7 @@ export class GroupManagerController {
         return deferred.promise;
     }
 
-    groupDetailsLink(group: IXMLGroup) {
+    groupDetailsLink(group: XMLGroup) {
         this.users.filter = group;
         this.updateTab('Users');
     }
@@ -188,7 +189,7 @@ export class GroupManagerController {
             webURL: this.siteUrl,
             operation: 'GetGroupCollectionFromUser',
             userLoginName: this.groups.filter.LoginName
-        }).then((response: IXMLGroup[]) => {
+        }).then((response: XMLGroup[]) => {
             this.buildInputs(response, 'groups');
             deferred.resolve(response);
         });
@@ -196,7 +197,7 @@ export class GroupManagerController {
         return deferred.promise;
     }
 
-    updateAvailableUsers(group: IXMLGroup) {
+    updateAvailableUsers(group: XMLGroup) {
         let deferred = this.$q.defer();
 
         toastr.info('Retrieving an updated list of users for the current group');
@@ -204,7 +205,7 @@ export class GroupManagerController {
             webURL: this.siteUrl,
             groupName: group.Name,
             operation: 'GetUserCollectionFromGroup'
-        }).then((response: IXMLUser[]) => {
+        }).then((response: XMLUser[]) => {
             this.buildInputs(response, 'users');
             deferred.resolve(response);
         }, (err) => {
@@ -224,7 +225,7 @@ export class GroupManagerController {
      * @param {array} groupsArray
      * @returns {Promise.promise|*}
      */
-    updatePermissions(operation: string, usersArray: IXMLUser[], groupsArray: IXMLGroup[]): ng.IPromise<Object[]> {
+    updatePermissions(operation: string, usersArray: XMLUser[], groupsArray: XMLGroup[]): ng.IPromise<Object[]> {
         let deferredPermissionsUpdate = this.$q.defer();
 
         if (!usersArray.length) {
@@ -232,8 +233,8 @@ export class GroupManagerController {
         } else {
             toastr.info('Processing your request');
             let queue = [];
-            _.each(usersArray, (user: IXMLUser) => {
-                _.each(groupsArray, (group: IXMLGroup) => {
+            _.each(usersArray, (user: XMLUser) => {
+                _.each(groupsArray, (group: XMLGroup) => {
                     let deferred = this.$q.defer();
 
                     this.apDataService.serviceWrapper({

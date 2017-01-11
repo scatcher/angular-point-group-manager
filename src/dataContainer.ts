@@ -1,10 +1,10 @@
-import {IXMLGroup, IXMLUser} from 'angular-point';
+import {XMLGroup, XMLUser} from 'angular-point';
 
 export class DataContainer {
     all = [];
     assigned = [];
     available = [];
-    filter: IXMLGroup | IXMLUser | any;
+    filter: XMLGroup | XMLUser | any;
     selectedAssigned = [];
     selectedAvailable = [];
 
