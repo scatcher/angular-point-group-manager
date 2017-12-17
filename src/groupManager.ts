@@ -1,305 +1,317 @@
-import * as toastr from 'toastr';
-import * as _ from 'lodash';
 import { NgTableParams as INgTableParams } from 'ng-table';
 import { XMLGroup, XMLUser, DataService } from 'angular-point';
+import * as _ from 'lodash';
+import * as ng from 'angular';
+import * as toastr from 'toastr';
 
 import { DataContainer } from './dataContainer';
 
 export class GroupManagerController {
-    static $inject = ['NgTableParams', '$filter', '$timeout', '$q', 'apDataService'];
-    activeTab = 'Users';
-    assignedOptions = [];
-    availableOptions = [];
-    groupFilter = '';
-    groups = new DataContainer();
-    groupsTable: INgTableParams<any>;
-    siteUrl = '';
-    sourceGroup: XMLGroup;
-    tabContents = {};
-    targetGroup: XMLGroup;
-    userFilter = '';
-    users = new DataContainer();
-    usersTable: Object;
+  static $inject = ['NgTableParams', '$filter', '$timeout', '$q', 'apDataService'];
+  activeTab = 'Users';
+  assignedOptions = [];
+  availableOptions = [];
+  groupFilter = '';
+  groups = new DataContainer();
+  groupsTable: INgTableParams<any>;
+  siteUrl = '';
+  sourceGroup: XMLGroup;
+  tabContents = {};
+  targetGroup: XMLGroup;
+  userFilter = '';
+  users = new DataContainer();
+  usersTable: Object;
 
-    constructor(private NgTableParams,
-        private $filter: ng.IFilterService,
-        private $timeout: ng.ITimeoutService,
-        private $q: ng.IQService,
-        private apDataService: DataService) {
-    }
+  constructor(
+    private NgTableParams,
+    private $filter: ng.IFilterService,
+    private $timeout: ng.ITimeoutService,
+    private $q: ng.IQService,
+    private apDataService: DataService
+  ) {}
 
-    $onInit() {
+  $onInit() {
+    this.apDataService.getCurrentSite().then(siteUrl => {
+      // Store reference to current site
+      this.siteUrl = siteUrl;
 
-        this.apDataService.getCurrentSite()
-            .then(siteUrl => this.siteUrl = siteUrl);
+      // Need to have current site to get users and groups
+      this.$q.all([this.getUserCollection(), this.getGroupCollection()]).then(() => this.updateTab('Users'));
+    });
 
-        this.$q.all([this.getUserCollection(), this.getGroupCollection()])
-            .then(() => this.updateTab('Users'));
+    this.buildTables();
+  }
 
-        this.buildTables();
-    }
+  buildInputs(assignedItems: XMLGroup[] | XMLUser[], type: 'groups' | 'users') {
+    // Create a quick map to speed up checking in future
+    let map = _.map(assignedItems, (item: XMLUser | XMLGroup) => item.ID);
+    let available = [];
+    let assigned = [];
+    let data = this[type];
 
-    buildInputs(assignedItems: XMLGroup[] | XMLUser[], type: 'groups' | 'users') {
-        // Create a quick map to speed up checking in future
-        let map = _.map(assignedItems, (item: XMLUser | XMLGroup) => item.ID);
-        let available = [];
-        let assigned = [];
-        let data = this[type];
+    // Clear out any existing data
+    data.available.length = 0;
+    data.selectedAvailable.length = 0;
+    data.assigned.length = 0;
+    data.selectedAssigned.length = 0;
 
-        // Clear out any existing data
-        data.available.length = 0;
-        data.selectedAvailable.length = 0;
-        data.assigned.length = 0;
-        data.selectedAssigned.length = 0;
+    _.each(data.all, item => {
+      if (_.indexOf(map, item.ID) > -1) {
+        // Already assigned
+        assigned.push(item);
+      } else {
+        available.push(item);
+      }
+    });
 
+    Array.prototype.push.apply(data.available, available);
+    Array.prototype.push.apply(data.assigned, assigned);
+  }
 
-        _.each(data.all, item => {
-            if (_.indexOf(map, item.ID) > -1) {
-                // Already assigned
-                assigned.push(item);
-            } else {
-                available.push(item);
+  buildTables() {
+    this.groupsTable = new this.NgTableParams(
+      {
+        page: 1, // show first page
+        count: 30, // count per page
+        sorting: {
+          title: 'asc',
+        },
+      },
+      {
+        total: this.groups.all.length, // length of data
+        getData: params => {
+          // use build-in angular filter
+          let orderedData = this.groups.all;
+          let filteredData = this.$filter('filter')(orderedData, record => {
+            let match = false;
+
+            if (this.groupFilter === '') {
+              return true;
             }
-        });
+            let textFields = ['ID', 'Name', 'Description'];
+            let searchStringLowerCase = this.groupFilter.toLowerCase();
+            _.each(textFields, fieldName => {
+              if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                match = true;
+              }
+            });
+            return match;
+          });
 
-        Array.prototype.push.apply(data.available, available);
-        Array.prototype.push.apply(data.assigned, assigned);
+          params.total(filteredData.length);
+          return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+        },
+      }
+    );
 
-    }
+    this.usersTable = new this.NgTableParams(
+      {
+        page: 1, // show first page
+        count: 30, // count per page
+        sorting: {
+          title: 'asc',
+        },
+      },
+      {
+        total: this.users.all.length, // length of data
+        getData: params => {
+          let orderedData = this.users.all;
+          let filteredData = this.$filter('filter')(orderedData, record => {
+            let match = false;
 
-    buildTables() {
-        this.groupsTable = new this.NgTableParams({
-            page: 1,            // show first page
-            count: 30,           // count per page
-            sorting: {
-                title: 'asc'
+            if (this.userFilter === '') {
+              return true;
             }
-        }, {
-                total: this.groups.all.length, // length of data
-                getData: (params) => {
-                    // use build-in angular filter
-                    let orderedData = this.groups.all;
-                    let filteredData = this.$filter('filter')(orderedData, (record) => {
-                        let match = false;
-
-                        if (this.groupFilter === '') {
-                            return true;
-                        }
-                        let textFields = ['ID', 'Name', 'Description'];
-                        let searchStringLowerCase = this.groupFilter.toLowerCase();
-                        _.each(textFields, (fieldName) => {
-                            if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                                match = true;
-                            }
-                        });
-                        return match;
-                    });
-
-                    params.total(filteredData.length);
-                    return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                }
+            let textFields = ['ID', 'Name', 'Email'];
+            let searchStringLowerCase = this.userFilter.toLowerCase();
+            _.each(textFields, fieldName => {
+              if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
+                match = true;
+              }
             });
+            return match;
+          });
 
-        this.usersTable = new this.NgTableParams({
-            page: 1,            // show first page
-            count: 30,           // count per page
-            sorting: {
-                title: 'asc'
-            }
-        }, {
-                total: this.users.all.length, // length of data
-                getData: (params) => {
-                    let orderedData = this.users.all;
-                    let filteredData = this.$filter('filter')(orderedData, (record) => {
-                        let match = false;
+          params.total(orderedData.length);
+          return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+        },
+      }
+    );
+  }
 
-                        if (this.userFilter === '') {
-                            return true;
-                        }
-                        let textFields = ['ID', 'Name', 'Email'];
-                        let searchStringLowerCase = this.userFilter.toLowerCase();
-                        _.each(textFields, (fieldName) => {
-                            if (record[fieldName].toLowerCase().indexOf(searchStringLowerCase) !== -1) {
-                                match = true;
-                            }
-                        });
-                        return match;
-                    });
+  initializeFilterFields() {
+    this.users.filter = this.users.filter || this.groups.all[0];
+    this.groups.filter = this.groups.filter || this.users.all[0];
+  }
 
-                    params.total(orderedData.length);
-                    return filteredData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-                }
-            });
-    }
+  getGroupCollection() {
+    let deferred = this.$q.defer();
+    this.apDataService
+      .getCollection({
+        webURL: this.siteUrl,
+        operation: 'GetGroupCollectionFromSite',
+      })
+      .then((response: XMLGroup[]) => {
+        Array.prototype.push.apply(this.groups.all, response);
+        deferred.resolve(this.groups.all);
+      });
+    return deferred.promise;
+  }
 
-    initializeFilterFields() {
-        this.users.filter = this.users.filter || this.groups.all[0];
-        this.groups.filter = this.groups.filter || this.users.all[0];
-    }
+  getUserCollection() {
+    let deferred = this.$q.defer();
+    this.apDataService
+      .getCollection({
+        webURL: this.siteUrl,
+        operation: 'GetUserCollectionFromSite',
+      })
+      .then((response: XMLUser[]) => {
+        // Assume that valid users all have email addresses and services/groups don't
+        _.each(response, user => this.users.all.push(user));
 
-    getGroupCollection() {
-        let deferred = this.$q.defer();
-        this.apDataService.getCollection({
-            webURL: this.siteUrl,
-            operation: 'GetGroupCollectionFromSite'
-        }).then((response: XMLGroup[]) => {
-            Array.prototype.push.apply(this.groups.all, response);
-            deferred.resolve(this.groups.all);
-        });
-        return deferred.promise;
-    }
+        deferred.resolve(this.users.all);
+      });
+    return deferred.promise;
+  }
 
-    getUserCollection() {
-        let deferred = this.$q.defer();
-        this.apDataService.getCollection({
-            webURL: this.siteUrl,
-            operation: 'GetUserCollectionFromSite'
-        }).then((response: XMLUser[]) => {
-            // Assume that valid users all have email addresses and services/groups don't
-            _.each(response, user => this.users.all.push(user));
+  groupDetailsLink(group: XMLGroup) {
+    this.users.filter = group;
+    this.updateTab('Users');
+  }
 
-            deferred.resolve(this.users.all);
-        });
-        return deferred.promise;
-    }
+  /**
+   * Copy users from one group into another
+   */
+  mergeGroups() {
+    this.updatePermissions('AddUserToGroup', this.users.assigned, [this.targetGroup]).then(promiseArray => {
+      toastr.success(promiseArray.length + ' users successfully merged.');
+      // Reset dropdowns to empty
+      this.sourceGroup = undefined;
+      this.targetGroup = undefined;
+    });
+  }
 
-    groupDetailsLink(group: XMLGroup) {
-        this.users.filter = group;
-        this.updateTab('Users');
-    }
+  updateAvailableGroups() {
+    let deferred = this.$q.defer();
+    toastr.info('Retrieving an updated list of groups for the current user');
+    this.apDataService
+      .getCollection({
+        webURL: this.siteUrl,
+        operation: 'GetGroupCollectionFromUser',
+        userLoginName: this.groups.filter.LoginName,
+      })
+      .then((response: XMLGroup[]) => {
+        this.buildInputs(response, 'groups');
+        deferred.resolve(response);
+      });
 
-    /**
-     * Copy users from one group into another
-     */
-    mergeGroups() {
-        this.updatePermissions('AddUserToGroup', this.users.assigned, [this.targetGroup])
-            .then((promiseArray) => {
-                toastr.success(promiseArray.length + ' users successfully merged.');
-                // Reset dropdowns to empty
-                this.sourceGroup = undefined;
-                this.targetGroup = undefined;
-            });
-    }
+    return deferred.promise;
+  }
 
+  updateAvailableUsers(group: XMLGroup) {
+    let deferred = this.$q.defer();
 
-    updateAvailableGroups() {
-        let deferred = this.$q.defer();
-        toastr.info('Retrieving an updated list of groups for the current user');
-        this.apDataService.getCollection({
-            webURL: this.siteUrl,
-            operation: 'GetGroupCollectionFromUser',
-            userLoginName: this.groups.filter.LoginName
-        }).then((response: XMLGroup[]) => {
-            this.buildInputs(response, 'groups');
-            deferred.resolve(response);
-        });
-
-        return deferred.promise;
-    }
-
-    updateAvailableUsers(group: XMLGroup) {
-        let deferred = this.$q.defer();
-
-        toastr.info('Retrieving an updated list of users for the current group');
-        this.apDataService.getCollection({
-            webURL: this.siteUrl,
-            groupName: group.Name,
-            operation: 'GetUserCollectionFromGroup'
-        }).then((response: XMLUser[]) => {
-            this.buildInputs(response, 'users');
-            deferred.resolve(response);
-        }, (err) => {
-            toastr.error('Please verify that you have sufficient permissions to view members of this group');
-            // No users were returned so display all users as available
-            deferred.resolve([]);
-        });
-
-        return deferred.promise;
-
-    }
-
-    /**
-     * Can add/remove multiple users to multiple groups asynchronously
-     * @param {string} operation - Either 'AddUserToGroup' || 'RemoveUserFromGroup'
-     * @param {array} usersArray
-     * @param {array} groupsArray
-     * @returns {Promise.promise|*}
-     */
-    updatePermissions(operation: string, usersArray: XMLUser[], groupsArray: XMLGroup[]): ng.IPromise<Object[]> {
-        let deferredPermissionsUpdate = this.$q.defer();
-
-        if (!usersArray.length) {
-            toastr.warning('Please make a selection');
-        } else {
-            toastr.info('Processing your request');
-            let queue = [];
-            _.each(usersArray, (user: XMLUser) => {
-                _.each(groupsArray, (group: XMLGroup) => {
-                    let deferred = this.$q.defer();
-
-                    this.apDataService.serviceWrapper({
-                        webUrl: this.siteUrl,
-                        filterNode: 'User',   // Look for all xml 'User' nodes and convert those in to JS objects
-                        operation: operation, // AddUserToGroup || RemoveUserFromGroup'
-                        groupName: group.Name,
-                        userLoginName: user.LoginName
-                    }).then((response) => {
-                        deferred.resolve(response);
-                    });
-
-                    queue.push(deferred.promise);
-                });
-
-            });
-
-            this.users.clearSelected();
-            this.groups.clearSelected();
-
-            // Resolved when all promises complete
-            this.$q.all(queue).then((responses) => {
-                toastr.success(operation === 'AddUserToGroup' ?
-                    'User successfully added' :
-                    'User successfully removed');
-
-                // Retrieve updated value from the server
-                if (this.activeTab === 'Users') {
-                    this.updateAvailableUsers(this.users.filter);
-                } else {
-                    this.updateAvailableGroups();
-                }
-
-                deferredPermissionsUpdate.resolve(responses);
-
-            }, () => {
-                toastr.error('There was a problem removing the user');
-            });
+    toastr.info('Retrieving an updated list of users for the current group');
+    this.apDataService
+      .getCollection({
+        webURL: this.siteUrl,
+        groupName: group.Name,
+        operation: 'GetUserCollectionFromGroup',
+      })
+      .then(
+        (response: XMLUser[]) => {
+          this.buildInputs(response, 'users');
+          deferred.resolve(response);
+        },
+        err => {
+          toastr.error('Please verify that you have sufficient permissions to view members of this group');
+          // No users were returned so display all users as available
+          deferred.resolve([]);
         }
+      );
 
-        return deferredPermissionsUpdate.promise;
-    }
+    return deferred.promise;
+  }
 
-    updateTab(tab: string) {
-        this.initializeFilterFields();
-        this.activeTab = tab;
+  /**
+   * Can add/remove multiple users to multiple groups asynchronously
+   * @param {string} operation - Either 'AddUserToGroup' || 'RemoveUserFromGroup'
+   * @param {array} usersArray
+   * @param {array} groupsArray
+   * @returns {Promise.promise|*}
+   */
+  updatePermissions(operation: string, usersArray: XMLUser[], groupsArray: XMLGroup[]) {
+    let deferredPermissionsUpdate = this.$q.defer();
 
-        if (tab === 'Groups') {
-            this.updateAvailableGroups().then(function () {
+    if (!usersArray.length) {
+      toastr.warning('Please make a selection');
+    } else {
+      toastr.info('Processing your request');
+      let queue = [];
+      _.each(usersArray, (user: XMLUser) => {
+        _.each(groupsArray, (group: XMLGroup) => {
+          let deferred = this.$q.defer();
 
+          this.apDataService
+            .serviceWrapper({
+              webUrl: this.siteUrl,
+              filterNode: 'User', // Look for all xml 'User' nodes and convert those in to JS objects
+              operation: operation, // AddUserToGroup || RemoveUserFromGroup'
+              groupName: group.Name,
+              userLoginName: user.LoginName,
+            })
+            .then(response => {
+              deferred.resolve(response);
             });
-        } else {
-            this.updateAvailableUsers(this.users.filter).then(function () {
 
-            });
+          queue.push(deferred.promise);
+        });
+      });
+
+      this.users.clearSelected();
+      this.groups.clearSelected();
+
+      // Resolved when all promises complete
+      this.$q.all(queue).then(
+        responses => {
+          toastr.success(operation === 'AddUserToGroup' ? 'User successfully added' : 'User successfully removed');
+
+          // Retrieve updated value from the server
+          if (this.activeTab === 'Users') {
+            this.updateAvailableUsers(this.users.filter);
+          } else {
+            this.updateAvailableGroups();
+          }
+
+          deferredPermissionsUpdate.resolve(responses);
+        },
+        () => {
+          toastr.error('There was a problem removing the user');
         }
+      );
     }
 
-    userDetailsLink(user) {
-        this.groups.filter = user;
-        this.updateTab('Groups');
+    return deferredPermissionsUpdate.promise as ng.IPromise<Array<{}>>;
+  }
+
+  updateTab(tab: string) {
+    this.initializeFilterFields();
+    this.activeTab = tab;
+
+    if (tab === 'Groups') {
+      this.updateAvailableGroups().then(function() {});
+    } else {
+      this.updateAvailableUsers(this.users.filter).then(function() {});
     }
+  }
+
+  userDetailsLink(user) {
+    this.groups.filter = user;
+    this.updateTab('Groups');
+  }
 }
 
 export const GroupManagerComponent = {
-    controller: GroupManagerController,
-    template: require('./angular-point-group-manager-templates.html')
+  controller: GroupManagerController,
+  template: require('./angular-point-group-manager-templates.html'),
 };
